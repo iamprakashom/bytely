@@ -1,0 +1,260 @@
+{
+  "reference_version": "0.20.0",
+  "fixture": "rust",
+  "nodes": {
+    "src/lib.rs": {
+      "name": "lib.rs",
+      "kind": "file",
+      "path": "src/lib.rs",
+      "span": "L1-L30",
+      "body_hash": "d0ba6c946d63f1967f078b6770ab1e07409072a93f3b9d89247c92c0cad6cca1",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "generic",
+      "chars": 452
+    },
+    "src/lib.rs#Cache": {
+      "name": "Cache",
+      "kind": "struct",
+      "path": "src/lib.rs",
+      "span": "L9-L11",
+      "body_hash": "118d90672531ae20e49ac0d12f142d8a3f5bcd1d9c63f8803828cca3577a84f8",
+      "owner": null,
+      "signature": "pub struct Cache",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/lib.rs#LIMIT": {
+      "name": "LIMIT",
+      "kind": "constant",
+      "path": "src/lib.rs",
+      "span": "L7-L7",
+      "body_hash": "b2631d3ef6e9acaf9449e66ae8eee9ded0073e3ffcfed2e84a923271ac9225e8",
+      "owner": null,
+      "signature": "pub const LIMIT: u32 = 10;",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/lib.rs#get": {
+      "name": "get",
+      "kind": "function",
+      "path": "src/lib.rs",
+      "span": "L18-L20",
+      "body_hash": "95033828a161f84ba188728b5372bbb5ddd5128744cbe97e82caf86963281f48",
+      "owner": null,
+      "signature": "pub fn get(&self) -> u32",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/lib.rs#new": {
+      "name": "new",
+      "kind": "function",
+      "path": "src/lib.rs",
+      "span": "L14-L16",
+      "body_hash": "6c1a4def35f7e0161f43abf760497769f14e427af026f62f7fb928b5e69e728c",
+      "owner": null,
+      "signature": "pub fn new() -> Self",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/lib.rs#run": {
+      "name": "run",
+      "kind": "function",
+      "path": "src/lib.rs",
+      "span": "L23-L29",
+      "body_hash": "daa2b42c30224ab4749d88be56a29b396fb8c72ae82955ddbe161e63c0a81917",
+      "owner": null,
+      "signature": "pub fn run(shape: &Shape) -> f64",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/lib.rs#scale": {
+      "name": "scale",
+      "kind": "function",
+      "path": "src/lib.rs",
+      "span": "L24-L26",
+      "body_hash": "652b6faa42bf5d29180457603f2259b61a4fbfc33a0a07dc993dde5d00231934",
+      "owner": null,
+      "signature": "fn scale(x: f64) -> f64",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/lib.rs#shapes": {
+      "name": "shapes",
+      "kind": "module",
+      "path": "src/lib.rs",
+      "span": "L1-L1",
+      "body_hash": "f53f623d0c9154cfa90d3e5765737ca573697783ca822fe246a57ca6cc9b9cc1",
+      "owner": null,
+      "signature": "pub mod shapes;",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/lib.rs#util": {
+      "name": "util",
+      "kind": "module",
+      "path": "src/lib.rs",
+      "span": "L2-L2",
+      "body_hash": "438514c7af6177cea95a98c0ccc33a553a402d29e241a6818993b6c975fc0332",
+      "owner": null,
+      "signature": "mod util;",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/shapes/mod.rs": {
+      "name": "mod.rs",
+      "kind": "file",
+      "path": "src/shapes/mod.rs",
+      "span": "L1-L26",
+      "body_hash": "480b64b144c262f8efb93331a6ea2ca8f8de0534353e13056840a964603a6364",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "generic",
+      "chars": 416
+    },
+    "src/shapes/mod.rs#Named": {
+      "name": "Named",
+      "kind": "interface",
+      "path": "src/shapes/mod.rs",
+      "span": "L6-L12",
+      "body_hash": "d3c4b3c12ff4a902221a69febe31579215994e3779c536d3e119b8fe32a9a344",
+      "owner": null,
+      "signature": "pub trait Named",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/shapes/mod.rs#Shape": {
+      "name": "Shape",
+      "kind": "enum",
+      "path": "src/shapes/mod.rs",
+      "span": "L1-L4",
+      "body_hash": "0729c179d018cb0a7e2e3ae07f0acef3f2b12407322c850d67af35c626c43147",
+      "owner": null,
+      "signature": "pub enum Shape",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/shapes/mod.rs#area": {
+      "name": "area",
+      "kind": "function",
+      "path": "src/shapes/mod.rs",
+      "span": "L20-L25",
+      "body_hash": "7fd431ab395695b53c838c6c6761e399b0ecc6be9e6c9540be64b89c4e7a0d21",
+      "owner": null,
+      "signature": "pub fn area(shape: &Shape) -> f64",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/shapes/mod.rs#describe": {
+      "name": "describe",
+      "kind": "function",
+      "path": "src/shapes/mod.rs",
+      "span": "L9-L11",
+      "body_hash": "53d998e9023c1248695f3fd49e86104d99cea7dcecfb9aa2f83458cda1e77543",
+      "owner": null,
+      "signature": "fn describe(&self) -> String",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/shapes/mod.rs#name": {
+      "name": "name",
+      "kind": "function",
+      "path": "src/shapes/mod.rs",
+      "span": "L7-L7",
+      "body_hash": "586bf2908f7a9c142a1f8f5da1f08ebd61ef68f136e613ae02fd10ee87c552ac",
+      "owner": null,
+      "signature": "fn name(&self) -> String;",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/shapes/mod.rs#name~2": {
+      "name": "name",
+      "kind": "function",
+      "path": "src/shapes/mod.rs",
+      "span": "L15-L17",
+      "body_hash": "5875569a25bfcf8e7680e77a86bd06e78d5bd2e331772898e52b132281b6c060",
+      "owner": null,
+      "signature": "fn name(&self) -> String",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    },
+    "src/util.rs": {
+      "name": "util.rs",
+      "kind": "file",
+      "path": "src/util.rs",
+      "span": "L1-L6",
+      "body_hash": "00ead09ccb01225356b9f0c2c0bea340529398e2b394cd825f7e115afb134b1d",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "generic",
+      "chars": 77
+    },
+    "src/util.rs#clamp": {
+      "name": "clamp",
+      "kind": "function",
+      "path": "src/util.rs",
+      "span": "L3-L5",
+      "body_hash": "5dfaee99c314da1da38dbc91a5fb06b88ba453aa9348b820f2eae51338742e05",
+      "owner": null,
+      "signature": "pub fn clamp(x: u32) -> u32",
+      "exported": true,
+      "origin": "generic",
+      "chars": null
+    }
+  },
+  "edges": [
+    [
+      "src/lib.rs",
+      "src/shapes/mod.rs",
+      "imports",
+      "extracted"
+    ],
+    [
+      "src/lib.rs#get",
+      "src/util.rs#clamp",
+      "calls",
+      "inferred"
+    ],
+    [
+      "src/lib.rs#run",
+      "src/lib.rs#get",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/lib.rs#run",
+      "src/lib.rs#new",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/lib.rs#run",
+      "src/lib.rs#scale",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/lib.rs#run",
+      "src/shapes/mod.rs#area",
+      "calls",
+      "inferred"
+    ]
+  ]
+}

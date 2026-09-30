@@ -1,0 +1,287 @@
+[
+  {
+    "diff": [
+      "edge-confidence",
+      "src/App.jsx#App",
+      "src/legacy.cjs#helper",
+      "calls",
+      "inferred",
+      "extracted"
+    ],
+    "reason": "IMPORT_BOUND_CALLS"
+  },
+  {
+    "diff": [
+      "edge-confidence",
+      "src/App.jsx#Panel",
+      "src/legacy.cjs#helper",
+      "calls",
+      "inferred",
+      "extracted"
+    ],
+    "reason": "IMPORT_BOUND_CALLS"
+  },
+  {
+    "diff": [
+      "edge-confidence",
+      "src/legacy.cjs#helper",
+      "src/math.js#add",
+      "calls",
+      "inferred",
+      "extracted"
+    ],
+    "reason": "COMMONJS_REQUIRE"
+  },
+  {
+    "diff": [
+      "edge-confidence",
+      "src/main.mjs#run",
+      "src/math.js#add",
+      "calls",
+      "inferred",
+      "extracted"
+    ],
+    "reason": "IMPORT_BOUND_CALLS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/app.cjs",
+      "src/app.cjs#View.lookup",
+      "contains"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/app.cjs",
+      "src/app.cjs#View.render",
+      "contains"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/app.cjs",
+      "src/app.cjs#app",
+      "contains"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/app.cjs",
+      "src/app.cjs#app.init",
+      "contains"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/app.cjs",
+      "src/app.cjs#app.set",
+      "contains"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/app.cjs",
+      "src/app.cjs#create",
+      "contains"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/app.cjs#View.render",
+      "src/app.cjs#View.lookup",
+      "calls"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/app.cjs#app.init",
+      "src/app.cjs#app.set",
+      "calls"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/legacy.cjs",
+      "fs",
+      "imports"
+    ],
+    "reason": "COMMONJS_REQUIRE"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/legacy.cjs",
+      "src/legacy.cjs#fs",
+      "contains"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/legacy.cjs",
+      "src/legacy.cjs#lib",
+      "contains"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/legacy.cjs",
+      "src/lib/index.js",
+      "imports"
+    ],
+    "reason": "COMMONJS_REQUIRE"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/legacy.cjs",
+      "src/math.js",
+      "imports"
+    ],
+    "reason": "COMMONJS_REQUIRE"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/legacy.cjs#helper",
+      "src/lib/index.js#twice",
+      "calls"
+    ],
+    "reason": "COMMONJS_REQUIRE"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/legacy.cjs#helper",
+      "src/math.js#mul",
+      "calls"
+    ],
+    "reason": "COMMONJS_REQUIRE"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/main.mjs#run",
+      "src/math.js#mul",
+      "calls"
+    ],
+    "reason": "IMPORT_BOUND_CALLS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/math.js",
+      "src/math.js#LIMIT",
+      "contains"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/math.js",
+      "src/math.js#counter",
+      "contains"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "src/main.mjs#handler",
+      "src/main.mjs#outer.next",
+      "calls"
+    ],
+    "reason": "NESTED_SCOPE"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/app.cjs#View.lookup"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/app.cjs#View.render"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/app.cjs#app"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/app.cjs#app.init"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/app.cjs#app.set"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/app.cjs#create"
+    ],
+    "reason": "MEMBER_ASSIGNED_FUNCTIONS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/legacy.cjs#fs"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/legacy.cjs#lib"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/math.js#LIMIT"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/math.js#counter"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  }
+]

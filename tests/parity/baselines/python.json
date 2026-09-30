@@ -1,0 +1,482 @@
+{
+  "reference_version": "0.20.0",
+  "fixture": "python",
+  "nodes": {
+    "pkg/__init__.py": {
+      "name": "__init__.py",
+      "kind": "file",
+      "path": "pkg/__init__.py",
+      "span": "L1-L2",
+      "body_hash": "f1c18c09086c8f05243a232b339fd27793d41b4149e6671bee4f96c463fb849c",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 30
+    },
+    "pkg/cli.py": {
+      "name": "cli.py",
+      "kind": "file",
+      "path": "pkg/cli.py",
+      "span": "L1-L19",
+      "body_hash": "c38ffe1e316202089ee6a17effbd67395d32df33936fe592f894535d961805c5",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 216
+    },
+    "pkg/cli.py#main": {
+      "name": "main",
+      "kind": "function",
+      "path": "pkg/cli.py",
+      "span": "L5-L7",
+      "body_hash": "3d6f3198a6ba497c1188e0a17b5a4d1db547e170b06231107e74c5901608919a",
+      "owner": null,
+      "signature": "def main()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/cli.py#other": {
+      "name": "other",
+      "kind": "function",
+      "path": "pkg/cli.py",
+      "span": "L17-L18",
+      "body_hash": "6a1fd31b0a573c5c3dbb605ecc052eafbc32fed6e48b0650a273b60c95403cef",
+      "owner": null,
+      "signature": "def other(inner)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/cli.py#outer": {
+      "name": "outer",
+      "kind": "function",
+      "path": "pkg/cli.py",
+      "span": "L10-L14",
+      "body_hash": "d3cf15b417764da577be63ae3aec924a690248e386a357ef03e2f561d672c3ec",
+      "owner": null,
+      "signature": "def outer()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/cli.py#outer.inner": {
+      "name": "inner",
+      "kind": "function",
+      "path": "pkg/cli.py",
+      "span": "L11-L12",
+      "body_hash": "9c057847c38429e80b9bc7a32f2b8eca74215219c7eb3c8294f48142740d8e6e",
+      "owner": null,
+      "signature": "def inner()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/helpers.py": {
+      "name": "helpers.py",
+      "kind": "file",
+      "path": "pkg/helpers.py",
+      "span": "L1-L19",
+      "body_hash": "15b2cf1b2a690853db70079179f92e01eb4194037250c60987176a1b7af878f8",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 219
+    },
+    "pkg/helpers.py#Base": {
+      "name": "Base",
+      "kind": "class",
+      "path": "pkg/helpers.py",
+      "span": "L13-L18",
+      "body_hash": "a01c72f63fe40157d73b8901915b8708c37c6e0d7b51917e3233ce1f9529a452",
+      "owner": null,
+      "signature": "class Base",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/helpers.py#Base.describe": {
+      "name": "describe",
+      "kind": "method",
+      "path": "pkg/helpers.py",
+      "span": "L14-L15",
+      "body_hash": "00479eb42c9d9a64b88d2b7645261815d45dc5ac8d31407f54d3702945614129",
+      "owner": "Base",
+      "signature": "def describe(self)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/helpers.py#Base.label": {
+      "name": "label",
+      "kind": "method",
+      "path": "pkg/helpers.py",
+      "span": "L17-L18",
+      "body_hash": "0b06bdf447b52e11c46562a223a0ae191064e1d73795c3e5f0f68860bc073a98",
+      "owner": "Base",
+      "signature": "def label(self)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/helpers.py#_private": {
+      "name": "_private",
+      "kind": "function",
+      "path": "pkg/helpers.py",
+      "span": "L9-L10",
+      "body_hash": "c815b41cb184fd6901b299b69f5228ed7fcabf54d1d52a469f989522b6f90822",
+      "owner": null,
+      "signature": "def _private()",
+      "exported": false,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/helpers.py#greet": {
+      "name": "greet",
+      "kind": "function",
+      "path": "pkg/helpers.py",
+      "span": "L5-L6",
+      "body_hash": "c0dd80de5a3097e066fd31d82b561920f3d1568951681328dea19b22337621c3",
+      "owner": null,
+      "signature": "def greet()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/models.py": {
+      "name": "models.py",
+      "kind": "file",
+      "path": "pkg/models.py",
+      "span": "L1-L31",
+      "body_hash": "551ff9c89b4cb6858089739f217a3162df05afdfb0f66862b7c7db261d4943d5",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 483
+    },
+    "pkg/models.py#Widget": {
+      "name": "Widget",
+      "kind": "class",
+      "path": "pkg/models.py",
+      "span": "L9-L26",
+      "body_hash": "f64e47aa3386f30b89517e823e27c577dc8d734e43179c7e3cd5f7da38284044",
+      "owner": null,
+      "signature": "class Widget(Base)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/models.py#Widget.Inner": {
+      "name": "Inner",
+      "kind": "class",
+      "path": "pkg/models.py",
+      "span": "L24-L26",
+      "body_hash": "45fb14fce7439958cecc54f154c454a5ceb722d7aa0e299142833d70a1d22fae",
+      "owner": null,
+      "signature": "class Inner",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/models.py#Widget.Inner.method": {
+      "name": "method",
+      "kind": "method",
+      "path": "pkg/models.py",
+      "span": "L25-L26",
+      "body_hash": "75e389b0d682b7e9ff1f1407da6a3c6b04523769852aa364c6f1f91e1d56442c",
+      "owner": "Inner",
+      "signature": "def method(self)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/models.py#Widget.fetch": {
+      "name": "fetch",
+      "kind": "method",
+      "path": "pkg/models.py",
+      "span": "L18-L19",
+      "body_hash": "ee02e8dde2c31807a840293c7a0ae2557620514eee6b14d73b0bf6fd0ddbcbeb",
+      "owner": "Widget",
+      "signature": "async def fetch(self)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/models.py#Widget.load": {
+      "name": "load",
+      "kind": "method",
+      "path": "pkg/models.py",
+      "span": "L21-L22",
+      "body_hash": "a5047470c6df02f47ca814e2c0980ea8a5edf517493f0531bf4d5ac388b7efc6",
+      "owner": "Widget",
+      "signature": "async def load(self)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/models.py#Widget.make": {
+      "name": "make",
+      "kind": "method",
+      "path": "pkg/models.py",
+      "span": "L11-L12",
+      "body_hash": "66342b957d3624c5cf3f10689d587ba29bc7c8d65f0d5ca68add704489148c29",
+      "owner": "Widget",
+      "signature": "def make()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/models.py#Widget.name": {
+      "name": "name",
+      "kind": "method",
+      "path": "pkg/models.py",
+      "span": "L15-L16",
+      "body_hash": "279c6559d1b61739fb32ea33e8c4d54704d138c3c9c46fe217cc5acab5db459f",
+      "owner": "Widget",
+      "signature": "def name(self)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/models.py#build_widget": {
+      "name": "build_widget",
+      "kind": "function",
+      "path": "pkg/models.py",
+      "span": "L29-L30",
+      "body_hash": "77640c8bf6ccb802651aeedcf4e6eda951b8b62c35562839987a9ce21a0b7bde",
+      "owner": null,
+      "signature": "def build_widget()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "pkg/star.py": {
+      "name": "star.py",
+      "kind": "file",
+      "path": "pkg/star.py",
+      "span": "L1-L6",
+      "body_hash": "9493ee1a7818a062ef3482c1bb8b35b3ad3940aa5c7e603fb841aaf5dfae3e25",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 55
+    },
+    "pkg/star.py#run": {
+      "name": "run",
+      "kind": "function",
+      "path": "pkg/star.py",
+      "span": "L4-L5",
+      "body_hash": "c693505f5a4f6a1798b2fddf12cc2900d06ca1221e054149bae9d1b18271465b",
+      "owner": null,
+      "signature": "def run()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    }
+  },
+  "edges": [
+    [
+      "pkg/cli.py",
+      "pkg",
+      "imports",
+      "extracted"
+    ],
+    [
+      "pkg/cli.py",
+      "pkg/cli.py#main",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/cli.py",
+      "pkg/cli.py#other",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/cli.py",
+      "pkg/cli.py#outer",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/cli.py#other",
+      "pkg/cli.py#outer.inner",
+      "calls",
+      "extracted"
+    ],
+    [
+      "pkg/cli.py#outer",
+      "pkg/cli.py#outer.inner",
+      "calls",
+      "extracted"
+    ],
+    [
+      "pkg/cli.py#outer",
+      "pkg/cli.py#outer.inner",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/helpers.py",
+      "pkg/helpers.py#Base",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/helpers.py",
+      "pkg/helpers.py#_private",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/helpers.py",
+      "pkg/helpers.py#greet",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/helpers.py#Base",
+      "pkg/helpers.py#Base.describe",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/helpers.py#Base",
+      "pkg/helpers.py#Base.label",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/helpers.py#Base.describe",
+      "pkg/helpers.py#Base.label",
+      "calls",
+      "extracted"
+    ],
+    [
+      "pkg/helpers.py#_private",
+      "pkg/helpers.py#greet",
+      "calls",
+      "extracted"
+    ],
+    [
+      "pkg/models.py",
+      ".cli",
+      "imports",
+      "extracted"
+    ],
+    [
+      "pkg/models.py",
+      ".helpers",
+      "imports",
+      "extracted"
+    ],
+    [
+      "pkg/models.py",
+      "pkg/models.py#Widget",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/models.py",
+      "pkg/models.py#build_widget",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/models.py",
+      "typing",
+      "imports",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget",
+      "pkg/helpers.py#Base",
+      "extends",
+      "inferred"
+    ],
+    [
+      "pkg/models.py#Widget",
+      "pkg/models.py#Widget.Inner",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget",
+      "pkg/models.py#Widget.fetch",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget",
+      "pkg/models.py#Widget.load",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget",
+      "pkg/models.py#Widget.make",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget",
+      "pkg/models.py#Widget.name",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget.Inner",
+      "pkg/models.py#Widget.Inner.method",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget.Inner.method",
+      "pkg/models.py#build_widget",
+      "calls",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget.fetch",
+      "pkg/models.py#Widget.load",
+      "calls",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget.make",
+      "pkg/models.py#Widget",
+      "calls",
+      "extracted"
+    ],
+    [
+      "pkg/models.py#Widget.name",
+      "pkg/helpers.py#greet",
+      "calls",
+      "inferred"
+    ],
+    [
+      "pkg/star.py",
+      ".helpers",
+      "imports",
+      "extracted"
+    ],
+    [
+      "pkg/star.py",
+      "pkg/star.py#run",
+      "contains",
+      "extracted"
+    ],
+    [
+      "pkg/star.py#run",
+      "pkg/helpers.py#greet",
+      "calls",
+      "inferred"
+    ]
+  ]
+}

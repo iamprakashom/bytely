@@ -1,0 +1,5 @@
+# Parity fixtures are hashed byte-for-byte against reference baselines;
+# checking them out with CRLF (core.autocrlf=true) would change every hash.
+tests/parity/fixtures/** text eol=lf
+tests/parity/baselines/** text eol=lf
+tests/parity/divergences/** text eol=lf

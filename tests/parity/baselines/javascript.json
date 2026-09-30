@@ -1,0 +1,566 @@
+{
+  "reference_version": "0.20.0",
+  "fixture": "javascript",
+  "nodes": {
+    "src/App.jsx": {
+      "name": "App.jsx",
+      "kind": "file",
+      "path": "src/App.jsx",
+      "span": "L1-L8",
+      "body_hash": "07446c5ea12afbae54d1d2bbc1b3201983270be5f25f1141d2c9c525fd11286d",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 183
+    },
+    "src/App.jsx#App": {
+      "name": "App",
+      "kind": "function",
+      "path": "src/App.jsx",
+      "span": "L3-L5",
+      "body_hash": "c0d6d37a85eaafde970f4ed1708471f8b3004976d8db7dd4fd0f766b9afa04fe",
+      "owner": null,
+      "signature": "function App()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/App.jsx#Panel": {
+      "name": "Panel",
+      "kind": "function",
+      "path": "src/App.jsx",
+      "span": "L7-L7",
+      "body_hash": "04094c5d325cbbcbe8cce084e295358f61c7dea08d93af7baedd33c33f7ac34a",
+      "owner": null,
+      "signature": "Panel = ()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/app.cjs": {
+      "name": "app.cjs",
+      "kind": "file",
+      "path": "src/app.cjs",
+      "span": "L1-L24",
+      "body_hash": "06885278316c059153b916a49656830978624233e4da1483e3f1d16cd83310f9",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 377
+    },
+    "src/app.cjs#View": {
+      "name": "View",
+      "kind": "function",
+      "path": "src/app.cjs",
+      "span": "L11-L13",
+      "body_hash": "503d230d0b434890fe8776ff6b51d86e4e100accb993ba12f54b72c428c65234",
+      "owner": null,
+      "signature": "function View(name)",
+      "exported": false,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/legacy.cjs": {
+      "name": "legacy.cjs",
+      "kind": "file",
+      "path": "src/legacy.cjs",
+      "span": "L1-L14",
+      "body_hash": "db9a71d419b018795feb05d7a6d7cd863c76ad62f777c0efa473ea2ca38ebcf4",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 280
+    },
+    "src/legacy.cjs#helper": {
+      "name": "helper",
+      "kind": "function",
+      "path": "src/legacy.cjs",
+      "span": "L5-L7",
+      "body_hash": "6d6b9a0a7561cf512ae81f5df70bd4203b1ce484268c6ba0acf302635401fc05",
+      "owner": null,
+      "signature": "helper = function ()",
+      "exported": false,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/legacy.cjs#read": {
+      "name": "read",
+      "kind": "function",
+      "path": "src/legacy.cjs",
+      "span": "L9-L11",
+      "body_hash": "1454a3de30ec3435d8729b80b54b5f3a3a184849f5a115d2b6858ee06d4a231a",
+      "owner": null,
+      "signature": "function read()",
+      "exported": false,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/lib/index.js": {
+      "name": "index.js",
+      "kind": "file",
+      "path": "src/lib/index.js",
+      "span": "L1-L6",
+      "body_hash": "e8bb82b9d5b7ca798edb12f408d264fbff30b1165ad48c51a1be7fcdb1a6d555",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 67
+    },
+    "src/lib/index.js#twice": {
+      "name": "twice",
+      "kind": "function",
+      "path": "src/lib/index.js",
+      "span": "L1-L3",
+      "body_hash": "4128e6409aa35eaa146650daa095e61a38d53d05a7d2dc1de93fcdc66a5463e1",
+      "owner": null,
+      "signature": "function twice(n)",
+      "exported": false,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/main.mjs": {
+      "name": "main.mjs",
+      "kind": "file",
+      "path": "src/main.mjs",
+      "span": "L1-L23",
+      "body_hash": "fb93f8255c46119efa2bbdac1f505c689ad0bef8316b899d902e9e4e590b3a98",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 378
+    },
+    "src/main.mjs#Circle": {
+      "name": "Circle",
+      "kind": "class",
+      "path": "src/main.mjs",
+      "span": "L22-L22",
+      "body_hash": "2d76101e1c792f0438493576d357b682c1b6b87cbff538b6422cb3d81af02ac4",
+      "owner": null,
+      "signature": "class Circle extends Shape",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/main.mjs#handler": {
+      "name": "handler",
+      "kind": "function",
+      "path": "src/main.mjs",
+      "span": "L18-L20",
+      "body_hash": "c7068b7b2bc84dfe3e976a008184318aa9d1ab1880e87e76adc0c6f7da638d4a",
+      "owner": null,
+      "signature": "function handler(req, next)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/main.mjs#outer": {
+      "name": "outer",
+      "kind": "function",
+      "path": "src/main.mjs",
+      "span": "L10-L16",
+      "body_hash": "cb7aee68890d4a3148c995ebae1cdfe817da35ca53aec12300fe157356e0c3f3",
+      "owner": null,
+      "signature": "function outer()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/main.mjs#outer.inner": {
+      "name": "inner",
+      "kind": "function",
+      "path": "src/main.mjs",
+      "span": "L12-L14",
+      "body_hash": "28602728c7db395b4df991e10f90f38398f2fc936df9c03ca1bb32e13e7f5c8d",
+      "owner": null,
+      "signature": "function inner()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/main.mjs#outer.next": {
+      "name": "next",
+      "kind": "function",
+      "path": "src/main.mjs",
+      "span": "L11-L11",
+      "body_hash": "e71404be86e1289f0172d4ea575286d3ac202b1c7dbae1edfc08650e081e9b71",
+      "owner": null,
+      "signature": "next = ()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/main.mjs#run": {
+      "name": "run",
+      "kind": "function",
+      "path": "src/main.mjs",
+      "span": "L4-L8",
+      "body_hash": "8f31d72aedc20581b617e8edabd1da5673232fc32ddbb8e8c747415fb9173c91",
+      "owner": null,
+      "signature": "run = ()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js": {
+      "name": "math.js",
+      "kind": "file",
+      "path": "src/math.js",
+      "span": "L1-L34",
+      "body_hash": "50172370959b59a0e967cff876715f27eaa1fe65fa8f721f8d31a69701ff5a05",
+      "owner": null,
+      "signature": null,
+      "exported": true,
+      "origin": "ast",
+      "chars": 460
+    },
+    "src/math.js#Shape": {
+      "name": "Shape",
+      "kind": "class",
+      "path": "src/math.js",
+      "span": "L14-L27",
+      "body_hash": "2022b55f0a99ff85343c929bf96dcc2f8b7f8c8bcdbe3eafb1cd0f2be0bd5a6d",
+      "owner": null,
+      "signature": "class Shape",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#Shape.area": {
+      "name": "area",
+      "kind": "method",
+      "path": "src/math.js",
+      "span": "L18-L20",
+      "body_hash": "cae54dafe0aa4db6c954a04a063fdf2ace603b5b2d9c00a0a6909d20674491ff",
+      "owner": "Shape",
+      "signature": "area()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#Shape.constructor": {
+      "name": "constructor",
+      "kind": "method",
+      "path": "src/math.js",
+      "span": "L15-L17",
+      "body_hash": "542e48c957133020aab2957fa3cbdaa585136269ae42b8dd44df111704fcbf1c",
+      "owner": "Shape",
+      "signature": "constructor(size)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#Shape.scale": {
+      "name": "scale",
+      "kind": "method",
+      "path": "src/math.js",
+      "span": "L21-L23",
+      "body_hash": "dfe55336ea1e3d26073704bac40595dec9b8e17aa48a78b2f3a72a1acfbfc26a",
+      "owner": "Shape",
+      "signature": "scale(n)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#Shape.unit": {
+      "name": "unit",
+      "kind": "method",
+      "path": "src/math.js",
+      "span": "L24-L26",
+      "body_hash": "df0d55cf6c54e74e9aac74396e8b7aa9af7589ed648ce83aaf72587dd0d3fe74",
+      "owner": "Shape",
+      "signature": "static unit()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#Square": {
+      "name": "Square",
+      "kind": "class",
+      "path": "src/math.js",
+      "span": "L29-L33",
+      "body_hash": "e801be45f907acaf40b44c40b5abcc5006542315f6d6b53c062c37fbb9c759a7",
+      "owner": null,
+      "signature": "class Square extends Shape",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#Square.area": {
+      "name": "area",
+      "kind": "method",
+      "path": "src/math.js",
+      "span": "L30-L32",
+      "body_hash": "eb6ee91688d75806aae27d3d6af867c4072f88b95397f2175e637201cc7a16b5",
+      "owner": "Square",
+      "signature": "area()",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#add": {
+      "name": "add",
+      "kind": "function",
+      "path": "src/math.js",
+      "span": "L4-L6",
+      "body_hash": "650970d8fd9b25f9a90378c26fd3aba7dd3c73b098523469291be838880cd3e5",
+      "owner": null,
+      "signature": "function add(a, b)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#ids": {
+      "name": "ids",
+      "kind": "function",
+      "path": "src/math.js",
+      "span": "L10-L12",
+      "body_hash": "13ba41bd61be094fc3c81090b2e8851b923e23fba9abd247059e3add29c1d5d3",
+      "owner": null,
+      "signature": "function* ids()",
+      "exported": false,
+      "origin": "ast",
+      "chars": null
+    },
+    "src/math.js#mul": {
+      "name": "mul",
+      "kind": "function",
+      "path": "src/math.js",
+      "span": "L8-L8",
+      "body_hash": "37904f6486348a05c7f3b5454bca3fcf4d0fcffa964562cc82c13f773e7d0d7c",
+      "owner": null,
+      "signature": "mul = (a, b)",
+      "exported": true,
+      "origin": "ast",
+      "chars": null
+    }
+  },
+  "edges": [
+    [
+      "src/App.jsx",
+      "src/App.jsx#App",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/App.jsx",
+      "src/App.jsx#Panel",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/App.jsx",
+      "src/legacy.cjs",
+      "imports",
+      "extracted"
+    ],
+    [
+      "src/App.jsx#App",
+      "src/legacy.cjs#helper",
+      "calls",
+      "inferred"
+    ],
+    [
+      "src/App.jsx#Panel",
+      "src/legacy.cjs#helper",
+      "calls",
+      "inferred"
+    ],
+    [
+      "src/app.cjs",
+      "src/app.cjs#View",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/legacy.cjs",
+      "src/legacy.cjs#helper",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/legacy.cjs",
+      "src/legacy.cjs#read",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/legacy.cjs#helper",
+      "src/math.js#add",
+      "calls",
+      "inferred"
+    ],
+    [
+      "src/lib/index.js",
+      "src/lib/index.js#twice",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/main.mjs",
+      "src/main.mjs#Circle",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/main.mjs",
+      "src/main.mjs#handler",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/main.mjs",
+      "src/main.mjs#outer",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/main.mjs",
+      "src/main.mjs#run",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/main.mjs",
+      "src/math.js",
+      "imports",
+      "extracted"
+    ],
+    [
+      "src/main.mjs#Circle",
+      "src/math.js#Shape",
+      "extends",
+      "inferred"
+    ],
+    [
+      "src/main.mjs#handler",
+      "src/main.mjs#outer.next",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/main.mjs#outer",
+      "src/main.mjs#outer.inner",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/main.mjs#outer",
+      "src/main.mjs#outer.inner",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/main.mjs#outer",
+      "src/main.mjs#outer.next",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/main.mjs#outer.inner",
+      "src/main.mjs#outer.next",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/main.mjs#outer.next",
+      "src/main.mjs#run",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/main.mjs#run",
+      "src/math.js#add",
+      "calls",
+      "inferred"
+    ],
+    [
+      "src/math.js",
+      "src/math.js#Shape",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js",
+      "src/math.js#Square",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js",
+      "src/math.js#add",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js",
+      "src/math.js#ids",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js",
+      "src/math.js#mul",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js#Shape",
+      "src/math.js#Shape.area",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js#Shape",
+      "src/math.js#Shape.constructor",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js#Shape",
+      "src/math.js#Shape.scale",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js#Shape",
+      "src/math.js#Shape.unit",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js#Shape.area",
+      "src/math.js#Shape.scale",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/math.js#Shape.scale",
+      "src/math.js#mul",
+      "calls",
+      "extracted"
+    ],
+    [
+      "src/math.js#Square",
+      "src/math.js#Shape",
+      "extends",
+      "extracted"
+    ],
+    [
+      "src/math.js#Square",
+      "src/math.js#Square.area",
+      "contains",
+      "extracted"
+    ],
+    [
+      "src/math.js#Square.area",
+      "src/math.js#Shape.scale",
+      "calls",
+      "extracted"
+    ]
+  ]
+}

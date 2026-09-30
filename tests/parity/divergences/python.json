@@ -1,0 +1,155 @@
+[
+  {
+    "diff": [
+      "edge-confidence",
+      "pkg/models.py#Widget",
+      "pkg/helpers.py#Base",
+      "extends",
+      "inferred",
+      "extracted"
+    ],
+    "reason": "IMPORT_BOUND_CALLS"
+  },
+  {
+    "diff": [
+      "edge-confidence",
+      "pkg/models.py#Widget.name",
+      "pkg/helpers.py#greet",
+      "calls",
+      "inferred",
+      "extracted"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "pkg/cli.py",
+      "pkg/__init__.py",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "pkg/cli.py",
+      "pkg/helpers.py",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "pkg/cli.py#main",
+      "pkg/helpers.py#greet",
+      "calls"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "pkg/helpers.py",
+      "pkg/helpers.py#MAX_ITEMS",
+      "contains"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "pkg/helpers.py",
+      "pkg/helpers.py#default_name",
+      "contains"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "pkg/models.py",
+      "pkg/cli.py",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "pkg/models.py",
+      "pkg/helpers.py",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "pkg/star.py",
+      "pkg/helpers.py",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "pkg/cli.py",
+      "pkg",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "pkg/cli.py#other",
+      "pkg/cli.py#outer.inner",
+      "calls"
+    ],
+    "reason": "NESTED_SCOPE"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "pkg/models.py",
+      ".cli",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "pkg/models.py",
+      ".helpers",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "pkg/star.py",
+      ".helpers",
+      "imports"
+    ],
+    "reason": "PYTHON_IMPORT_RESOLUTION"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "pkg/helpers.py#MAX_ITEMS"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "pkg/helpers.py#default_name"
+    ],
+    "reason": "TOP_LEVEL_BINDINGS"
+  }
+]

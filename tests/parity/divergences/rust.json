@@ -1,0 +1,453 @@
+[
+  {
+    "diff": [
+      "edge-confidence",
+      "src/lib.rs#run",
+      "src/shapes/mod.rs#area",
+      "calls",
+      "inferred",
+      "extracted"
+    ],
+    "reason": "RUST_MODULE_IMPORTS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs",
+      "src/lib.rs#Cache",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs",
+      "src/lib.rs#LIMIT",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs",
+      "src/lib.rs#run",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs",
+      "src/lib.rs#shapes",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs",
+      "src/lib.rs#util",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs",
+      "src/util.rs",
+      "imports"
+    ],
+    "reason": "RUST_MODULE_IMPORTS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs#Cache",
+      "src/lib.rs#Cache.get",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs#Cache",
+      "src/lib.rs#Cache.new",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs#Cache.get",
+      "src/util.rs#clamp",
+      "calls"
+    ],
+    "reason": "RUST_MODULE_IMPORTS"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs#run",
+      "src/lib.rs#Cache.get",
+      "calls"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs#run",
+      "src/lib.rs#Cache.new",
+      "calls"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs#run",
+      "src/lib.rs#run.scale",
+      "calls"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/lib.rs#run",
+      "src/lib.rs#run.scale",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/shapes/mod.rs",
+      "src/shapes/mod.rs#Named",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/shapes/mod.rs",
+      "src/shapes/mod.rs#Shape",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/shapes/mod.rs",
+      "src/shapes/mod.rs#area",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/shapes/mod.rs#Named",
+      "src/shapes/mod.rs#Named.describe",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/shapes/mod.rs#Named",
+      "src/shapes/mod.rs#Named.name",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/shapes/mod.rs#Shape",
+      "src/shapes/mod.rs#Shape.name",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-extra",
+      "src/util.rs",
+      "src/util.rs#clamp",
+      "contains"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "src/lib.rs#get",
+      "src/util.rs#clamp",
+      "calls"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "src/lib.rs#run",
+      "src/lib.rs#get",
+      "calls"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "src/lib.rs#run",
+      "src/lib.rs#new",
+      "calls"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "edge-missing",
+      "src/lib.rs#run",
+      "src/lib.rs#scale",
+      "calls"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/lib.rs#Cache.get"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/lib.rs#Cache.new"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/lib.rs#run.scale"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/shapes/mod.rs#Named.describe"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/shapes/mod.rs#Named.name"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-extra",
+      "src/shapes/mod.rs#Shape.name"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/lib.rs",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/lib.rs#Cache",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/lib.rs#LIMIT",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/lib.rs#run",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/lib.rs#shapes",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/lib.rs#util",
+      "exported",
+      true,
+      false
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/lib.rs#util",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/shapes/mod.rs",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/shapes/mod.rs#Named",
+      "kind",
+      "interface",
+      "trait"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/shapes/mod.rs#Named",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/shapes/mod.rs#Shape",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/shapes/mod.rs#area",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/util.rs",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-field",
+      "src/util.rs#clamp",
+      "origin",
+      "generic",
+      "ast"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-missing",
+      "src/lib.rs#get"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-missing",
+      "src/lib.rs#new"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-missing",
+      "src/lib.rs#scale"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-missing",
+      "src/shapes/mod.rs#describe"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-missing",
+      "src/shapes/mod.rs#name"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  },
+  {
+    "diff": [
+      "node-missing",
+      "src/shapes/mod.rs#name~2"
+    ],
+    "reason": "RUST_GENERIC_TIER"
+  }
+]
