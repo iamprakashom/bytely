@@ -1,0 +1,116 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bytely"
+version = "0.21.0a1"
+description = "Build a repo's context graph as a folder of linked markdown files: a local, regenerable cache that every query keeps in sync with your code."
+readme = "README.md"
+license = "MPL-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [
+    { name = "Bytely" },
+]
+keywords = ["ai", "agents", "knowledge-graph", "context", "codebase", "llm", "bytely"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Code Generators",
+]
+
+dependencies = [
+    # CLI
+    "click>=8.1",
+    # Tree-sitter core and the grammars of the supported languages: Python,
+    # Rust, and JavaScript (JavaScript falls back to the TSX grammar).
+    "tree-sitter>=0.23",
+    "tree-sitter-python>=0.23",
+    "tree-sitter-rust>=0.24.2",
+    "tree-sitter-javascript>=0.25",
+    "tree-sitter-typescript>=0.23",
+    # Graph storage and file selection
+    "orjson>=3.9",
+    "pathspec>=0.12",
+]
+
+[project.optional-dependencies]
+# Languages not yet verified. Installing one makes `bytely build` index that
+# language's files; without it they are skipped.
+go = ["tree-sitter-go>=0.23"]
+java = ["tree-sitter-java>=0.23"]
+kotlin = ["tree-sitter-kotlin>=1.1.0"]
+swift = ["tree-sitter-swift>=0.7.3"]
+php = ["tree-sitter-php>=0.23"]
+c = ["tree-sitter-c>=0.24.2"]
+cpp = ["tree-sitter-cpp>=0.23.4"]
+csharp = ["tree-sitter-c-sharp>=0.23.5"]
+languages = ["bytely[go,java,kotlin,swift,php,c,cpp,csharp]"]
+# LLM pass (`build --deep`): talks to providers over plain HTTPS with the
+# standard library, so it needs nothing extra. Kept for compatibility.
+llm = []
+# Agent integrations and the context engine (Phases 5 and 7).
+agents = [
+    "rich>=13.0",
+    "python-frontmatter>=1.0",
+]
+dev = [
+    "bytely[languages]",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "mypy>=1.10",
+    "ruff>=0.4",
+]
+all = ["bytely[languages,llm,agents,dev]"]
+
+[project.scripts]
+bytely = "bytely.cli:main"
+
+# --- Tool configs ---
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bytely"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 80
+src = ["src"]
+# Parity fixtures are input source code for the reference comparison and use
+# patterns (star imports, TYPE_CHECKING-only imports) on purpose.
+extend-exclude = ["tests/parity/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "TCH", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["D"]
+"test_*.py" = ["D"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bytely"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-p", "no:cacheprovider"]
+asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "parity: golden-file parity tests against TypeScript baseline",
+]

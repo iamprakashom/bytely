@@ -1,0 +1,33 @@
+# Bytely's regenerable local graph and extraction cache.
+
+# Python bytecode and test/tool caches.
+.tmp/
+__pycache__/
+*.py[cod]
+*.pyc
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+coverage.xml
+htmlcov/
+
+# Virtual environments and local environment variables.
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Build and packaging output.
+build/
+dist/
+*.egg-info/
+
+# OS/editor noise.
+.DS_Store
+Thumbs.db
