@@ -1,31 +1,138 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/reference/configuration-reference/
+# Bytely CI: lint, the test suite on Linux (every supported Python) and
+# Windows, and a smoke run on real repositories from the benchmark corpus.
+# Dependencies come from uv.lock (`uv sync --locked`), so CI tests exactly
+# what is locked and fails when pyproject.toml and the lock disagree.
 version: 2.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/guides/orchestrate/jobs-steps/#jobs-overview & https://circleci.com/docs/reference/configuration-reference/#jobs
-jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/guides/execution-managed/executor-intro/ & https://circleci.com/docs/reference/configuration-reference/#executor-job
-    docker:
-      # Specify the version you desire here
-      # See: https://circleci.com/developer/images/image/cimg/base
-      - image: cimg/base:current
+orbs:
+  win: circleci/windows@5.0
 
-    # Add steps to the job
-    # See: https://circleci.com/docs/guides/orchestrate/jobs-steps/#steps-overview & https://circleci.com/docs/reference/configuration-reference/#steps
+parameters:
+  uv-version:
+    type: string
+    default: "0.10.10"
+
+executors:
+  linux:
+    docker:
+      - image: cimg/base:current
+    resource_class: medium
+
+commands:
+  setup-python:
+    description: Install uv, then the locked dependencies on a Python version.
+    parameters:
+      python:
+        type: string
     steps:
-      # Checkout the code as the first step.
+      - run:
+          name: Install uv << pipeline.parameters.uv-version >>
+          command: |
+            curl -LsSf https://astral.sh/uv/<< pipeline.parameters.uv-version >>/install.sh | sh
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$BASH_ENV"
+      - restore_cache:
+          keys:
+            - uv-linux-<< parameters.python >>-{{ checksum "uv.lock" }}
+      - run:
+          name: Install Python << parameters.python >> and dependencies
+          command: |
+            uv python install << parameters.python >>
+            uv sync --locked --extra dev --python << parameters.python >>
+      - save_cache:
+          key: uv-linux-<< parameters.python >>-{{ checksum "uv.lock" }}
+          paths:
+            - ~/.cache/uv
+            - ~/.local/share/uv/python
+
+jobs:
+  lint:
+    executor: linux
+    steps:
+      - checkout
+      - setup-python:
+          python: "3.13"
+      - run:
+          name: Ruff
+          command: uv run --no-sync ruff check src tests bench
+      - run:
+          name: Mypy
+          command: |
+            uv run --no-sync mypy src
+            uv run --no-sync mypy bench/run.py bench/fetch.py bench/hotspots.py bench/compare.py
+
+  test:
+    parameters:
+      python:
+        type: string
+    executor: linux
+    steps:
+      - checkout
+      - setup-python:
+          python: << parameters.python >>
+      - run:
+          name: Pytest
+          command: |
+            mkdir -p test-results
+            uv run --no-sync pytest -q --junitxml=test-results/junit.xml
+      - store_test_results:
+          path: test-results
+
+  test-windows:
+    # Windows has a case-insensitive filesystem and CRLF checkouts, where
+    # card names and the parity fixtures (.gitattributes) behave differently.
+    executor:
+      name: win/default
+      shell: powershell.exe
+    steps:
       - checkout
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Install uv, dependencies, and run pytest
+          command: |
+            $ErrorActionPreference = "Stop"
+            irm https://astral.sh/uv/<< pipeline.parameters.uv-version >>/install.ps1 | iex
+            $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+            uv python install 3.13
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            uv sync --locked --extra dev --python 3.13
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            New-Item -ItemType Directory -Force test-results | Out-Null
+            uv run --no-sync pytest -q --junitxml=test-results/junit.xml
+            exit $LASTEXITCODE
+      - store_test_results:
+          path: test-results
 
-# Orchestrate jobs using workflows
-# See: https://circleci.com/docs/guides/orchestrate/workflows/ & https://circleci.com/docs/reference/configuration-reference/#workflows
+  smoke:
+    # Build, rebuild, and check real repositories pinned in bench/corpus.toml.
+    executor: linux
+    steps:
+      - checkout
+      - setup-python:
+          python: "3.13"
+      - run:
+          name: Fetch pinned repositories
+          command: uv run --no-sync python bench/fetch.py click express ripgrep
+      - run:
+          name: Build and check each graph
+          command: |
+            for tree in .bench-cache/click .bench-cache/express .bench-cache/ripgrep; do
+              echo "== $tree"
+              uv run --no-sync bytely build "$tree"
+              # A second build reuses every extraction.
+              uv run --no-sync bytely build "$tree" \
+                | grep -E "extraction cache: [0-9]+ hits, 0 misses"
+              uv run --no-sync bytely check "$tree"
+              # Re-extract everything: catches a cache that no longer
+              # matches the extractor, which a cached check calls fresh.
+              uv run --no-sync bytely check --no-cache "$tree"
+            done
+
 workflows:
-  say-hello-workflow: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  ci:
     jobs:
-      - say-hello
+      - lint
+      - test:
+          matrix:
+            parameters:
+              python: ["3.11", "3.12", "3.13", "3.14"]
+      - test-windows
+      - smoke
