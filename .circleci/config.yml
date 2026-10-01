@@ -1,8 +1,13 @@
 # Bytely CI: lint, the test suite on Linux (every supported Python) and
 # Windows, and integration tests on real repositories from the benchmark
-# corpus (on both).
+# corpus (on both). On a pull request, `pr-report` then posts the results of
+# every test job as one comment, edited in place on each push.
 # Dependencies come from uv.lock (`uv sync --locked`), so CI tests exactly
 # what is locked and fails when pyproject.toml and the lock disagree.
+#
+# Test jobs write JUnit XML to reports/<job name>/ and record pytest's exit
+# code instead of stopping, so their results are saved to the workspace
+# even when tests fail; a last step then fails the job with that code.
 version: 2.1
 
 orbs:
@@ -20,17 +25,22 @@ executors:
     resource_class: medium
 
 commands:
-  setup-python:
-    description: Install uv, then the locked dependencies on a Python version.
-    parameters:
-      python:
-        type: string
+  install-uv:
+    description: Install uv and put it on PATH for later steps.
     steps:
       - run:
           name: Install uv << pipeline.parameters.uv-version >>
           command: |
             curl -LsSf https://astral.sh/uv/<< pipeline.parameters.uv-version >>/install.sh | sh
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$BASH_ENV"
+
+  setup-python:
+    description: Install uv, then the locked dependencies on a Python version.
+    parameters:
+      python:
+        type: string
+    steps:
+      - install-uv
       - restore_cache:
           keys:
             - uv-linux-<< parameters.python >>-{{ checksum "uv.lock" }}
@@ -45,6 +55,23 @@ commands:
             - ~/.cache/uv
             - ~/.local/share/uv/python
 
+  save-reports:
+    description: Keep reports/ for CircleCI's test view and for pr-report.
+    steps:
+      - store_test_results:
+          path: reports
+      - persist_to_workspace:
+          root: .
+          paths:
+            - reports
+
+  fail-if-tests-failed:
+    description: Fail the job with the exit code pytest recorded.
+    steps:
+      - run:
+          name: Fail if tests failed
+          command: exit "$(cat pytest-status)"
+
 jobs:
   lint:
     executor: linux
@@ -54,12 +81,12 @@ jobs:
           python: "3.13"
       - run:
           name: Ruff
-          command: uv run --no-sync ruff check src tests bench
+          command: uv run --no-sync ruff check src tests bench .circleci
       - run:
           name: Mypy
           command: |
             uv run --no-sync mypy src
-            uv run --no-sync mypy bench/run.py bench/fetch.py bench/hotspots.py bench/compare.py
+            uv run --no-sync mypy bench/run.py bench/fetch.py bench/hotspots.py bench/compare.py .circleci/pr_report.py
 
   test:
     parameters:
@@ -73,10 +100,12 @@ jobs:
       - run:
           name: Pytest
           command: |
-            mkdir -p test-results
-            uv run --no-sync pytest -q --junitxml=test-results/junit.xml
-      - store_test_results:
-          path: test-results
+            mkdir -p "reports/$CIRCLE_JOB"
+            set +e
+            uv run --no-sync pytest -q --junitxml="reports/$CIRCLE_JOB/junit.xml"
+            echo $? > pytest-status
+      - save-reports
+      - fail-if-tests-failed
 
   test-windows:
     # Windows has a case-insensitive filesystem and CRLF checkouts, where
@@ -87,7 +116,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install uv and dependencies, run pytest and integration tests
+          name: Install uv and dependencies
           command: |
             $ErrorActionPreference = "Stop"
             irm https://astral.sh/uv/<< pipeline.parameters.uv-version >>/install.ps1 | iex
@@ -95,16 +124,25 @@ jobs:
             uv python install 3.13
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
             uv sync --locked --extra dev --python 3.13
-            if ($LASTEXITCODE) { exit $LASTEXITCODE }
-            New-Item -ItemType Directory -Force test-results | Out-Null
-            uv run --no-sync pytest -q --junitxml=test-results/junit.xml
-            if ($LASTEXITCODE) { exit $LASTEXITCODE }
-            uv run --no-sync python bench/fetch.py click express ripgrep
-            if ($LASTEXITCODE) { exit $LASTEXITCODE }
-            uv run --no-sync pytest -q -m integration --junitxml=test-results/integration.xml
             exit $LASTEXITCODE
-      - store_test_results:
-          path: test-results
+      - run:
+          name: Pytest, then integration tests
+          command: |
+            $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+            $reports = "reports\$env:CIRCLE_JOB"
+            New-Item -ItemType Directory -Force $reports | Out-Null
+            uv run --no-sync pytest -q --junitxml="$reports\junit.xml"
+            $status = $LASTEXITCODE
+            uv run --no-sync python bench/fetch.py click express ripgrep
+            if ($LASTEXITCODE -and -not $status) { $status = $LASTEXITCODE }
+            uv run --no-sync pytest -q -m integration --junitxml="$reports\integration.xml"
+            if ($LASTEXITCODE -and -not $status) { $status = $LASTEXITCODE }
+            Set-Content -Path pytest-status -Value $status
+            exit 0
+      - save-reports
+      - run:
+          name: Fail if tests failed
+          command: exit [int](Get-Content pytest-status)
 
   integration:
     # Real repositories pinned in bench/corpus.toml: known call and import
@@ -121,18 +159,53 @@ jobs:
       - run:
           name: Pytest (integration)
           command: |
-            mkdir -p test-results
-            uv run --no-sync pytest -q -m integration --junitxml=test-results/junit.xml
-      - store_test_results:
-          path: test-results
+            mkdir -p "reports/$CIRCLE_JOB"
+            set +e
+            uv run --no-sync pytest -q -m integration --junitxml="reports/$CIRCLE_JOB/junit.xml"
+            echo $? > pytest-status
+      - save-reports
+      - fail-if-tests-failed
+
+  pr-report:
+    # Posts the test jobs' results to the branch's open pull request. Runs
+    # after them whatever their outcome; needs GITHUB_TOKEN from the
+    # `bytely-github` context (forks get none, and the report is skipped).
+    executor: linux
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - install-uv
+      - run:
+          name: Post test results to the pull request
+          command: |
+            uv run --no-project --python 3.13 python .circleci/pr_report.py reports \
+              --repo-url "<< pipeline.project.git_url >>" \
+              --branch "<< pipeline.git.branch >>" \
+              --sha "<< pipeline.git.revision >>" \
+              --workflow-url "https://app.circleci.com/pipelines/workflows/$CIRCLE_WORKFLOW_ID" \
+              --expect test-3.11,test-3.12,test-3.13,test-3.14,test-windows,integration
 
 workflows:
   ci:
     jobs:
       - lint
       - test:
+          name: test-<< matrix.python >>
           matrix:
             parameters:
               python: ["3.11", "3.12", "3.13", "3.14"]
       - test-windows
       - integration
+      - pr-report:
+          context: bytely-github
+          requires:
+            - test-3.11: terminal
+            - test-3.12: terminal
+            - test-3.13: terminal
+            - test-3.14: terminal
+            - test-windows: terminal
+            - integration: terminal
+          filters:
+            branches:
+              ignore: main
