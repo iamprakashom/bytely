@@ -2,12 +2,18 @@
 
 Usage:
     python .circleci/pr_report.py REPORTS_DIR --repo-url URL --branch NAME
-        --sha SHA [--workflow-url URL] [--expect JOB,JOB,...] [--dry-run]
+        --sha SHA [--workflow-url URL] [--expect JOB,JOB,...]
+        [--baseline FILE] [--base-name NAME] [--write-summary FILE]
+        [--dry-run]
 
 REPORTS_DIR holds one folder per CI job, named after the job, with the
 JUnit XML files pytest wrote there. The report totals them per job and
 overall, and lists failures and the slowest tests. The comment carries a
 hidden marker, so each push edits the same comment instead of adding one.
+
+`--write-summary` saves this run's counts and test names as JSON; CI keeps
+the one from the latest `main` run. Given that file as `--baseline`, the
+report shows each count's change and the tests added or removed since.
 
 GitHub access comes from GITHUB_TOKEN. Without a token (pull requests
 from forks get no secrets) or without an open pull request for the
@@ -39,6 +45,8 @@ SLOWEST = 5
 # GitHub rejects comments over 65,536 characters.
 MAX_BODY = 60_000
 MAX_COMMENT_PAGES = 20
+MAX_LISTED_TESTS = 50
+SUMMARY_VERSION = 1
 
 Api = Callable[[str, str, dict[str, Any] | None], Any]
 
@@ -159,6 +167,65 @@ def parse_reports(root: Path) -> list[JobStats]:
     return jobs
 
 
+def summarize(jobs: list[JobStats], sha: str) -> dict[str, Any]:
+    """A run's counts and test names per job, for a later comparison."""
+    return {
+        "version": SUMMARY_VERSION,
+        "sha": sha,
+        "jobs": {
+            job.name: {
+                "passed": job.passed,
+                "failed": job.failed,
+                "errors": job.errors,
+                "skipped": job.skipped,
+                "tests": sorted({case.name for case in job.cases}),
+            }
+            for job in jobs
+            if job.reports
+        },
+    }
+
+
+def load_baseline(path: Path) -> dict[str, Any] | None:
+    """A summary written by `--write-summary`, or None if unusable."""
+    try:
+        data = json.loads(path.read_text("utf-8"))
+    except (OSError, ValueError):
+        return None
+    if (
+        not isinstance(data, dict)
+        or data.get("version") != SUMMARY_VERSION
+        or not isinstance(data.get("jobs"), dict)
+    ):
+        return None
+    return data
+
+
+def _delta(value: int, before: int | None) -> str:
+    """`value`, followed by its change when there is one: `270 (+1)`."""
+    if before is None or value == before:
+        return f"{value:,}"
+    return f"{value:,} ({value - before:+,})"
+
+
+def _base_problems(base: dict[str, Any]) -> int | None:
+    if "failed" not in base:
+        return None
+    return int(base["failed"]) + int(base.get("errors", 0))
+
+
+def _test_names(jobs: dict[str, Any]) -> set[str]:
+    return {name for job in jobs.values() for name in job.get("tests", [])}
+
+
+def _listed(title: str, names: list[str]) -> list[str]:
+    lines = ["", f"<details><summary>{title} ({len(names)})</summary>", ""]
+    lines += [f"- `{name}`" for name in names[:MAX_LISTED_TESTS]]
+    if len(names) > MAX_LISTED_TESTS:
+        lines.append(f"- … and {len(names) - MAX_LISTED_TESTS} more")
+    return [*lines, "", "</details>"]
+
+
 def _duration(seconds: float) -> str:
     whole = round(seconds)
     return f"{whole // 60}m {whole % 60:02d}s" if whole >= 60 else f"{whole}s"
@@ -175,8 +242,16 @@ def render(
     sha: str,
     workflow_url: str | None = None,
     expected: list[str] | None = None,
+    baseline: dict[str, Any] | None = None,
+    base_name: str = "main",
+    baseline_missing: bool = False,
 ) -> str:
-    """The comment body: totals, per-job table, failures, slowest tests."""
+    """The comment body: totals, per-job table, failures, slowest tests.
+
+    With a `baseline` summary, each count shows its change and the tests
+    added or removed since are listed; `baseline_missing` says that a
+    comparison was asked for but no baseline was available.
+    """
     present = {job.name for job in jobs if job.reports}
     missing = [name for name in expected or [] if name not in present]
     passed = sum(job.passed for job in jobs)
@@ -193,6 +268,27 @@ def render(
             f"### {icon} Tests · {commit} · {passed:,} passed · "
             f"{problems:,} failed · {skipped:,} skipped"
         ),
+    ]
+    base_jobs: dict[str, Any] = baseline["jobs"] if baseline else {}
+    added: list[str] = []
+    removed: list[str] = []
+    if baseline:
+        now = {case.name for job in jobs for case in job.cases}
+        before = _test_names(base_jobs)
+        added, removed = sorted(now - before), sorted(before - now)
+        base_sha = str(baseline.get("sha", ""))[:7]
+        change = (
+            f"{len(now) - len(before):+,} tests ({len(added):,} added, "
+            f"{len(removed):,} removed)"
+            if added or removed
+            else "no tests added or removed"
+        )
+        lines.append(f"Compared with `{base_name}` at `{base_sha}`: {change}")
+    elif baseline_missing:
+        lines.append(
+            f"_No `{base_name}` baseline yet, so changes are not shown._"
+        )
+    lines += [
         "",
         "| Job | Passed | Failed | Skipped | Time |",
         "|---|--:|--:|--:|--:|",
@@ -201,9 +297,16 @@ def render(
         if not job.reports:
             continue
         mark = " ❌" if job.problems else ""
+        base = base_jobs.get(job.name)
+        if baseline and base is None:
+            mark += " (new)"
+        base = base or {}
         lines.append(
-            f"| {_cell(job.name)}{mark} | {job.passed:,} | {job.problems:,} "
-            f"| {job.skipped:,} | {_duration(job.seconds)} |"
+            f"| {_cell(job.name)}{mark} "
+            f"| {_delta(job.passed, base.get('passed'))} "
+            f"| {_delta(job.problems, _base_problems(base))} "
+            f"| {_delta(job.skipped, base.get('skipped'))} "
+            f"| {_duration(job.seconds)} |"
         )
     lines.extend(
         f"| {_cell(name)} ⚠️ | — | — | — | no results |" for name in missing
@@ -235,6 +338,11 @@ def render(
                 "(the job failed before tests ran, or was canceled)."
             ),
         ]
+
+    if added:
+        lines += _listed("Added tests", added)
+    if removed:
+        lines += _listed("Removed tests", removed)
 
     timed = sorted(
         (
@@ -346,15 +454,36 @@ def main(argv: list[str] | None = None, api: Api | None = None) -> int:
         default="",
         help="comma-separated jobs that must have reported results",
     )
+    parser.add_argument(
+        "--baseline",
+        type=Path,
+        help="a summary to compare with (from --write-summary on main)",
+    )
+    parser.add_argument(
+        "--base-name", default="main", help="what the baseline is, for text"
+    )
+    parser.add_argument(
+        "--write-summary", type=Path, help="save this run's summary here"
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
     expected = [name.strip() for name in args.expect.split(",") if name.strip()]
+    jobs = parse_reports(args.reports)
+    if args.write_summary:
+        args.write_summary.parent.mkdir(parents=True, exist_ok=True)
+        args.write_summary.write_text(
+            json.dumps(summarize(jobs, args.sha)), encoding="utf-8"
+        )
+    baseline = load_baseline(args.baseline) if args.baseline else None
     body = render(
-        parse_reports(args.reports),
+        jobs,
         sha=args.sha,
         workflow_url=args.workflow_url,
         expected=expected,
+        baseline=baseline,
+        base_name=args.base_name,
+        baseline_missing=args.baseline is not None and baseline is None,
     )
     print(body)
     if args.dry_run:
