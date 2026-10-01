@@ -1,5 +1,6 @@
 # Bytely CI: lint, the test suite on Linux (every supported Python) and
-# Windows, and a smoke run on real repositories from the benchmark corpus.
+# Windows, and integration tests on real repositories from the benchmark
+# corpus (on both).
 # Dependencies come from uv.lock (`uv sync --locked`), so CI tests exactly
 # what is locked and fails when pyproject.toml and the lock disagree.
 version: 2.1
@@ -86,7 +87,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install uv, dependencies, and run pytest
+          name: Install uv and dependencies, run pytest and integration tests
           command: |
             $ErrorActionPreference = "Stop"
             irm https://astral.sh/uv/<< pipeline.parameters.uv-version >>/install.ps1 | iex
@@ -97,12 +98,18 @@ jobs:
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
             New-Item -ItemType Directory -Force test-results | Out-Null
             uv run --no-sync pytest -q --junitxml=test-results/junit.xml
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            uv run --no-sync python bench/fetch.py click express ripgrep
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            uv run --no-sync pytest -q -m integration --junitxml=test-results/integration.xml
             exit $LASTEXITCODE
       - store_test_results:
           path: test-results
 
-  smoke:
-    # Build, rebuild, and check real repositories pinned in bench/corpus.toml.
+  integration:
+    # Real repositories pinned in bench/corpus.toml: known call and import
+    # edges, then live edits through one MCP session, each compared with an
+    # uncached rebuild (tests/test_corpus_integration.py).
     executor: linux
     steps:
       - checkout
@@ -112,19 +119,12 @@ jobs:
           name: Fetch pinned repositories
           command: uv run --no-sync python bench/fetch.py click express ripgrep
       - run:
-          name: Build and check each graph
+          name: Pytest (integration)
           command: |
-            for tree in .bench-cache/click .bench-cache/express .bench-cache/ripgrep; do
-              echo "== $tree"
-              uv run --no-sync bytely build "$tree"
-              # A second build reuses every extraction.
-              uv run --no-sync bytely build "$tree" \
-                | grep -E "extraction cache: [0-9]+ hits, 0 misses"
-              uv run --no-sync bytely check "$tree"
-              # Re-extract everything: catches a cache that no longer
-              # matches the extractor, which a cached check calls fresh.
-              uv run --no-sync bytely check --no-cache "$tree"
-            done
+            mkdir -p test-results
+            uv run --no-sync pytest -q -m integration --junitxml=test-results/junit.xml
+      - store_test_results:
+          path: test-results
 
 workflows:
   ci:
@@ -135,4 +135,4 @@ workflows:
             parameters:
               python: ["3.11", "3.12", "3.13", "3.14"]
       - test-windows
-      - smoke
+      - integration

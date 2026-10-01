@@ -5,6 +5,12 @@
 # are the fixed inputs timed after the build: `ask` is a question, `grep`
 # a literal, `callers` a symbol, and `skeleton` a file relative to the
 # benchmarked tree.
+#
+# `[*.expect]` lists facts about the pinned source that the graph must get
+# right, checked by tests/test_corpus_integration.py: `calls` and `imports`
+# edges that must exist and `absent` call edges that must not, each as
+# "file#qualified.name -> file#qualified.name" (a file alone for imports).
+# Overload suffixes in node ids (`main~3`) are ignored when matching.
 
 [click]
 language = "python"
@@ -18,6 +24,16 @@ ask = "how are command line options parsed"
 grep = "def invoke"
 callers = "invoke"
 skeleton = "src/click/core.py"
+
+[click.expect]
+calls = [
+  "src/click/termui.py#secho -> src/click/utils.py#echo",
+  "src/click/exceptions.py#ClickException.show -> src/click/utils.py#echo",
+  "src/click/core.py#BaseCommand.main -> src/click/utils.py#_detect_program_name",
+  "src/click/shell_completion.py#_resolve_context -> src/click/core.py#BaseCommand.make_context",
+  "src/click/testing.py#CliRunner.invoke -> src/click/core.py#BaseCommand.main",
+]
+absent = ["src/click/utils.py#echo -> src/click/termui.py#secho"]
 
 [requests]
 language = "python"
@@ -58,6 +74,18 @@ grep = "fn search"
 callers = "search"
 skeleton = "crates/core/main.rs"
 
+[ripgrep.expect]
+calls = [
+  "crates/core/main.rs#search -> crates/core/flags/hiargs.rs#HiArgs.search_worker",
+  "crates/core/search.rs#search_path -> crates/searcher/src/searcher/mod.rs#Searcher.search_path",
+  "crates/core/flags/parse.rs#parse -> crates/core/flags/hiargs.rs#HiArgs.from_low_args",
+  "crates/core/search.rs#SearchWorker.search -> crates/core/haystack.rs#Haystack.path",
+  "crates/ignore/examples/walk.rs#main -> crates/ignore/src/walk.rs#WalkBuilder.new",
+]
+absent = [
+  "crates/core/flags/hiargs.rs#HiArgs.search_worker -> crates/core/main.rs#search",
+]
+
 [tokio]
 language = "rust"
 size = "large"
@@ -83,6 +111,19 @@ ask = "how does the router dispatch a request"
 grep = "handle"
 callers = "lib/router/index.js"
 skeleton = "lib/router/index.js"
+
+[express.expect]
+calls = [
+  "lib/application.js#app.lazyrouter -> lib/middleware/init.js#init",
+  "lib/application.js#app.set -> lib/utils.js#compileETag",
+  "lib/response.js#res.send -> lib/utils.js#setCharset",
+  "lib/router/route.js#Route.all -> lib/router/layer.js#Layer",
+]
+imports = [
+  "lib/express.js -> lib/application.js",
+  "lib/router/index.js -> lib/router/route.js",
+]
+absent = ["lib/utils.js#setCharset -> lib/response.js#res.send"]
 
 [threejs]
 language = "javascript"
