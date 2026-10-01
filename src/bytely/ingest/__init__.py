@@ -1,1 +1,1 @@
-"""Reading the repository: walking and selecting source files."""
+"""Walking the repository's file tree, honoring its ignore rules."""

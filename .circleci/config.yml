@@ -80,10 +80,14 @@ jobs:
       - setup-python:
           python: "3.13"
       - run:
-          name: Ruff
-          command: |
-            uv run --no-sync ruff check src tests bench .circleci
-            uv run --no-sync ruff format --check src tests bench .circleci
+          name: Ruff check
+          command: uv run --no-sync ruff check src tests bench .circleci
+      - run:
+          # Also report formatting when the lint step failed, so a pull
+          # request learns about both problems in one run.
+          name: Ruff format
+          command: uv run --no-sync ruff format --check src tests bench .circleci
+          when: always
       - run:
           name: Mypy
           command: |

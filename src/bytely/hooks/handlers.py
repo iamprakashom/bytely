@@ -342,6 +342,7 @@ def start_sync(project: Path) -> bool:
     else:
         flags["start_new_session"] = True
     try:
+        # Safe to spawn: our own interpreter and module, fixed arguments.
         subprocess.Popen(
             [sys.executable, "-m", "bytely", "hook", "sync"],
             cwd=project,

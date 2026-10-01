@@ -121,8 +121,10 @@ def parse_reports(root: Path) -> list[JobStats]:
         for report in sorted(folder.rglob("*.xml")):
             stats.reports += 1
             try:
-                # Our own test jobs wrote these files in this pipeline, and
-                # forks get no token, so the input is not attacker-supplied.
+                # Test output, possibly from a fork's tests. ElementTree never
+                # fetches external entities, and expat >= 2.4 caps entity
+                # expansion, so a hostile file can fail the parse but not
+                # read files or exhaust memory.
                 document = ET.parse(report).getroot()  # noqa: S314
             except ET.ParseError as error:
                 stats.add(
@@ -284,8 +286,7 @@ def github_api(token: str) -> Api:
                 "Content-Type": "application/json",
             },
         )
-        opened = urllib.request.urlopen(request, timeout=30)  # noqa: S310
-        with opened as response:
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
             payload = response.read()
         return json.loads(payload) if payload else None
 
