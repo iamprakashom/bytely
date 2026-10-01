@@ -1,4 +1,5 @@
 # Bytely's regenerable local graph and extraction cache.
+/bytely/
 
 # Python bytecode and test/tool caches.
 .tmp/
@@ -31,3 +32,8 @@ dist/
 # OS/editor noise.
 .DS_Store
 Thumbs.db
+
+# Benchmark corpus, results, and local-only tool config.
+.bench-cache/
+bench/results/
+*.local.toml

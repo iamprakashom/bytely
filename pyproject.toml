@@ -68,7 +68,9 @@ dev = [
     "mypy>=1.10",
     "ruff>=0.4",
 ]
-all = ["bytely[languages,llm,agents,dev]"]
+# Benchmark harness (`bench/run.py`): peak-memory sampling.
+bench = ["psutil>=5.9"]
+all = ["bytely[languages,llm,agents,dev,bench]"]
 
 [project.scripts]
 bytely = "bytely.cli:main"

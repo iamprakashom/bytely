@@ -1,0 +1,19 @@
+# Performance budgets (Migrationplan.md §9) that `bench/compare.py` enforces
+# on a `bench/run.py` result. Seconds are medians; memory is peak RSS.
+
+# `bytely --version`, median of five.
+startup_s = 0.3
+
+# A fresh CLI query, including interpreter startup.
+query_s = 0.5
+queries = ["ask", "grep", "callers", "skeleton", "map"]
+
+# Peak memory of any single command, on any repository.
+peak_mb = 400
+
+# Regression gate against bench/baseline.json: a metric fails when it is
+# both this much slower (as a fraction) and slower by more than the noise
+# floor, so tiny metrics don't fail on jitter.
+regression = 0.20
+noise_floor_s = 0.05
+noise_floor_mb = 10

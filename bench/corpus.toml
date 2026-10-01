@@ -1,0 +1,99 @@
+# Pinned repositories the benchmark runs on. Each is fetched at an exact
+# commit (the tag is informational) so numbers stay comparable over time.
+#
+# `subdir` benchmarks only that folder of the repository. `[*.queries]`
+# are the fixed inputs timed after the build: `ask` is a question, `grep`
+# a literal, `callers` a symbol, and `skeleton` a file relative to the
+# benchmarked tree.
+
+[click]
+language = "python"
+size = "small"
+url = "https://github.com/pallets/click"
+tag = "8.1.7"
+commit = "874ca2bc1c30d93a4ac6e36a15ed685eafe89097"
+
+[click.queries]
+ask = "how are command line options parsed"
+grep = "def invoke"
+callers = "invoke"
+skeleton = "src/click/core.py"
+
+[requests]
+language = "python"
+size = "medium"
+url = "https://github.com/psf/requests"
+tag = "v2.32.3"
+commit = "0e322af87745eff34caffe4df68456ebc20d9068"
+
+[requests.queries]
+ask = "how does a session send a prepared request"
+grep = "def send"
+callers = "send"
+skeleton = "src/requests/sessions.py"
+
+[django]
+language = "python"
+size = "large"
+url = "https://github.com/django/django"
+tag = "5.1.2"
+commit = "c499184f198df8deb8b5f7282b679babef8384ff"
+
+[django.queries]
+ask = "how does the ORM compile a queryset to SQL"
+grep = "def get_queryset"
+callers = "get_queryset"
+skeleton = "django/db/models/query.py"
+
+[ripgrep]
+language = "rust"
+size = "medium"
+url = "https://github.com/BurntSushi/ripgrep"
+tag = "14.1.1"
+commit = "4649aa9700619f94cf9c66876e9549d83420e16c"
+
+[ripgrep.queries]
+ask = "how does the searcher read a file"
+grep = "fn search"
+callers = "search"
+skeleton = "crates/core/main.rs"
+
+[tokio]
+language = "rust"
+size = "large"
+url = "https://github.com/tokio-rs/tokio"
+tag = "tokio-1.40.0"
+commit = "ea6d652a102dee3f22b490db70545b7f66a23fb7"
+
+[tokio.queries]
+ask = "how does the runtime spawn a task"
+grep = "fn spawn"
+callers = "spawn"
+skeleton = "tokio/src/runtime/builder.rs"
+
+[express]
+language = "javascript"
+size = "small"
+url = "https://github.com/expressjs/express"
+tag = "4.21.1"
+commit = "8e229f92752ad51462c868b99f6e6c2e559801b0"
+
+[express.queries]
+ask = "how does the router dispatch a request"
+grep = "handle"
+callers = "lib/router/index.js"
+skeleton = "lib/router/index.js"
+
+[threejs]
+language = "javascript"
+size = "large"
+url = "https://github.com/mrdoob/three.js"
+tag = "r169"
+commit = "37d6f280a5cd642e801469bb048f52300d31258e"
+subdir = "src"
+
+[threejs.queries]
+ask = "how does the renderer draw an object"
+grep = "updateMatrixWorld"
+callers = "updateMatrixWorld"
+skeleton = "core/Object3D.js"
