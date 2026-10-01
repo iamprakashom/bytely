@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from bytely.graph.types import GraphV1
 
 MIN_PROMPT_CHARS = 12
-SYNC_TOKEN_ENV = "BYTELY_SYNC_TOKEN"
+SYNC_TOKEN_ENV = "BYTELY_SYNC_TOKEN"  # noqa: S105 - an env var name
 LOCK_HEARTBEAT_SECONDS = 60.0
 HOOK_MARKER = "bytely hook "
 _EVENT_NAMES = {
@@ -342,7 +342,7 @@ def start_sync(project: Path) -> bool:
     else:
         flags["start_new_session"] = True
     try:
-        subprocess.Popen(  # noqa: S603 - our own interpreter and module
+        subprocess.Popen(
             [sys.executable, "-m", "bytely", "hook", "sync"],
             cwd=project,
             env={

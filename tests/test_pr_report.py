@@ -15,7 +15,8 @@ import pytest
 
 SCRIPT = Path(__file__).resolve().parents[1] / ".circleci" / "pr_report.py"
 _spec = importlib.util.spec_from_file_location("pr_report", SCRIPT)
-assert _spec is not None and _spec.loader is not None
+assert _spec is not None
+assert _spec.loader is not None
 pr_report = importlib.util.module_from_spec(_spec)
 sys.modules["pr_report"] = pr_report
 _spec.loader.exec_module(pr_report)
@@ -88,7 +89,8 @@ def test_totals_per_job_across_report_files(tmp_path: Path) -> None:
 def test_unreadable_report_counts_as_an_error(tmp_path: Path) -> None:
     root = _reports(tmp_path, {"integration/junit.xml": "<testsuite"})
     (job,) = pr_report.parse_reports(root)
-    assert job.errors == 1 and job.cases[0].message.startswith("unreadable")
+    assert job.errors == 1
+    assert job.cases[0].message.startswith("unreadable")
 
 
 def test_missing_reports_folder_reports_nothing(tmp_path: Path) -> None:
@@ -167,7 +169,7 @@ def test_parse_repo(url: str) -> None:
 
 
 def test_parse_repo_rejects_other_hosts() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="not a GitHub repository URL"):
         pr_report.parse_repo("https://gitlab.com/a/b")
 
 
@@ -218,7 +220,8 @@ def test_creates_the_comment_when_none_is_marked(tmp_path: Path) -> None:
         "POST",
         "/repos/iamprakashom/bytely/issues/7/comments",
     )
-    assert body is not None and body["body"].startswith(pr_report.MARKER)
+    assert body is not None
+    assert body["body"].startswith(pr_report.MARKER)
     # The branch is looked up as owner:branch, URL-encoded.
     assert "head=iamprakashom%3Afeat%2Fx" in api.calls[0][1]
 

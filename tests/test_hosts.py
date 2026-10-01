@@ -157,7 +157,8 @@ def test_section_upsert_keeps_crlf_and_replaces_in_place(
     assert files.upsert_section(path, "second", True) == "unchanged"
     text = path.read_bytes().decode()
     assert "\n" not in text.replace("\r\n", "")  # every line ending is CRLF
-    assert text.count(files.START) == 1 and "first" not in text
+    assert text.count(files.START) == 1
+    assert "first" not in text
 
     assert files.strip_section(path, True) == "removed"
     assert path.read_bytes() == b"intro\r\n"

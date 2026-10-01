@@ -134,10 +134,14 @@ def diff(reference: dict[str, Any], bytely: dict[str, Any]) -> list[list[Any]]:
     """
     items: list[list[Any]] = []
     ref_nodes, by_nodes = reference["nodes"], bytely["nodes"]
-    for node_id in sorted(ref_nodes.keys() - by_nodes.keys()):
-        items.append(["node-missing", node_id])
-    for node_id in sorted(by_nodes.keys() - ref_nodes.keys()):
-        items.append(["node-extra", node_id])
+    items.extend(
+        ["node-missing", node_id]
+        for node_id in sorted(ref_nodes.keys() - by_nodes.keys())
+    )
+    items.extend(
+        ["node-extra", node_id]
+        for node_id in sorted(by_nodes.keys() - ref_nodes.keys())
+    )
     for node_id in sorted(ref_nodes.keys() & by_nodes.keys()):
         for field in NODE_FIELDS:
             up_value = ref_nodes[node_id].get(field)
@@ -147,15 +151,19 @@ def diff(reference: dict[str, Any], bytely: dict[str, Any]) -> list[list[Any]]:
 
     ref_edges = _edge_confidences(reference["edges"])
     by_edges = _edge_confidences(bytely["edges"])
-    for key in sorted(ref_edges.keys() - by_edges.keys()):
-        items.append(["edge-missing", *key])
-    for key in sorted(by_edges.keys() - ref_edges.keys()):
-        items.append(["edge-extra", *key])
-    for key in sorted(ref_edges.keys() & by_edges.keys()):
-        if ref_edges[key] != by_edges[key]:
-            items.append(
-                ["edge-confidence", *key, ref_edges[key], by_edges[key]]
-            )
+    items.extend(
+        ["edge-missing", *key]
+        for key in sorted(ref_edges.keys() - by_edges.keys())
+    )
+    items.extend(
+        ["edge-extra", *key]
+        for key in sorted(by_edges.keys() - ref_edges.keys())
+    )
+    items.extend(
+        ["edge-confidence", *key, ref_edges[key], by_edges[key]]
+        for key in sorted(ref_edges.keys() & by_edges.keys())
+        if ref_edges[key] != by_edges[key]
+    )
     return items
 
 

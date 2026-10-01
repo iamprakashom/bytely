@@ -127,7 +127,8 @@ def test_post_edit_marks_stale_and_shows_dependents(
     assert context.startswith("[bytely] blast radius for billing.py")
     assert "checkout (checkout.py)" in context
     stats = state.read_stats(repo) or {}
-    assert stats["dirty"] and stats["staleFiles"] == ["billing.py"]
+    assert stats["dirty"]
+    assert stats["staleFiles"] == ["billing.py"]
     assert stats["lastFile"] == "billing.py"
 
     # A Codex patch names the file in its header.
@@ -150,8 +151,10 @@ def test_post_edit_marks_stale_and_shows_dependents(
     assert token
     sync(repo, token)
     stats = state.read_stats(repo) or {}
-    assert not stats["dirty"] and stats["staleCount"] == 0
-    assert stats["nodeCount"] > 0 and not stats["syncing"]
+    assert not stats["dirty"]
+    assert stats["staleCount"] == 0
+    assert stats["nodeCount"] > 0
+    assert not stats["syncing"]
     again = state.acquire_lock(repo)  # the sync released it
     assert again
     state.release_lock(repo, again)
@@ -218,9 +221,9 @@ def test_tool_use_accounting_and_stats(
     assert session["savedTokens"] == 1_500
 
     report = format_session_stats(state.latest_session(repo))
-    assert (
-        "session t" in report and "~1,500" in report and "67% bytely" in report
-    )
+    assert "session t" in report
+    assert "~1,500" in report
+    assert "67% bytely" in report
     out = CliRunner().invoke(main, ["stats", str(repo)])
     assert "tokens saved:  ~1,500" in out.output
 
@@ -241,7 +244,8 @@ def test_cursor_events_are_counted(
     run_hook("cursor-session-end", {"conversation_id": "c"})
     session = state.read_session(repo, "c")
     assert session["savedTokens"] == 42
-    assert session["sourceReads"] == 1 and session["endedAt"]
+    assert session["sourceReads"] == 1
+    assert session["endedAt"]
 
 
 def _transcript(path: Path, reply: str) -> None:
@@ -296,7 +300,8 @@ def test_transcript_billing_and_tally(tmp_path: Path) -> None:
     assert billing.tokens == 11_000  # counted once, sidechain excluded
     assert billing.cost_micros == 6_000  # (1000 + 10000 * 0.1) * $3/Mtok
     turn = last_assistant_turn(str(transcript))
-    assert turn is not None and has_savings_tally(turn.text)
+    assert turn is not None
+    assert has_savings_tally(turn.text)
     assert last_turn_billing(str(tmp_path / "missing.jsonl")) is None
     assert last_turn_billing(None) is None
 
@@ -321,7 +326,8 @@ def test_stop_prices_the_turn_once_and_counts_the_tally(
     session = state.read_session(repo, "p")
     assert session["inputCostMicros"] == 6_000
     assert session["inputTokensBilled"] == 11_000
-    assert session["bytelyTurns"] == 1 and session["reportedTurns"] == 1
+    assert session["bytelyTurns"] == 1
+    assert session["reportedTurns"] == 1
     assert "value saved:   ~<$0.01" in format_session_stats(
         {"id": "p", **session}
     )
@@ -335,11 +341,15 @@ def test_statusline(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     text = render(
         {"session_id": "x", "context_window": {"used_percentage": 41.6}}
     )
-    assert "bytely" in text and "nodes /" in text and "✓ synced" in text
-    assert "~2,500 tok saved" in text and "ctx 42%" in text
+    assert "bytely" in text
+    assert "nodes /" in text
+    assert "✓ synced" in text
+    assert "~2,500 tok saved" in text
+    assert "ctx 42%" in text
     run_hook("post-edit", {"tool_input": {"file_path": "billing.py"}})
     text = render({"session_id": "x"})
-    assert "⚠ 1 stale" in text and "last: " in text
+    assert "⚠ 1 stale" in text
+    assert "last: " in text
     assert "billing.py" in render({"agent": {"name": "billing.py"}})
 
     monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path / "nowhere"))
@@ -454,7 +464,8 @@ def test_foreign_statusline_and_opt_outs(
     (repo / ".claude" / "settings.json").unlink()
     run_init(repo, home, agents=["claude"], build=False)
     settings = json.loads((repo / ".claude" / "settings.json").read_text())
-    assert "statusLine" not in settings and "hooks" in settings
+    assert "statusLine" not in settings
+    assert "hooks" in settings
 
 
 def test_tool_savings_matcher_covers_mcp_tools() -> None:
@@ -509,13 +520,15 @@ def test_sync_lock_is_released_only_by_its_owner(
 ) -> None:
     repo = _repo(tmp_path, monkeypatch)
     first = state.acquire_lock(repo)
-    assert first and state.acquire_lock(repo) is None
+    assert first
+    assert state.acquire_lock(repo) is None
     # The first lock went stale and a second sync took over.
     lock = state.cache_dir(repo) / state.LOCK_FILE
     old = lock.stat().st_mtime - state.LOCK_STALE_SECONDS - 1
     __import__("os").utime(lock, (old, old))
     second = state.acquire_lock(repo)
-    assert second and second != first
+    assert second
+    assert second != first
     # The first sync finishing must not free the second one's lock.
     state.release_lock(repo, first)
     assert not state.touch_lock(repo, first)
@@ -569,7 +582,8 @@ def test_stale_lock_reclaim_keeps_a_live_owner(tmp_path: Path) -> None:
     old = path.stat().st_mtime - 120
     os.utime(path, (old, old))
     second = lock.try_acquire(path, stale=60)
-    assert second and lock.owner(path) == second
+    assert second
+    assert lock.owner(path) == second
 
 
 def test_lock_is_reentrant_within_a_thread(tmp_path: Path) -> None:

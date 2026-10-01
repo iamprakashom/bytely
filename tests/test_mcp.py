@@ -161,9 +161,11 @@ def test_a_directory_without_a_graph_gets_no_tools_and_is_not_indexed(
     fresh = Session(Workspace(tmp_path, create=False))
 
     listed = handle_message(fresh, _request("tools/list"))
-    assert listed is not None and listed["result"]["tools"] == []
+    assert listed is not None
+    assert listed["result"]["tools"] == []
     called = _call(fresh, "bytely_find_code", query="save")
-    assert called["isError"] and _text(called) == NO_GRAPH
+    assert called["isError"]
+    assert _text(called) == NO_GRAPH
     assert not (tmp_path / "bytely").exists()
 
 
@@ -302,10 +304,12 @@ def test_serve_reads_lines_and_writes_one_reply_per_request(
     )
     replies = [json.loads(line) for line in stdout.getvalue().splitlines()]
 
-    assert replies[0]["id"] == 1 and "protocolVersion" in replies[0]["result"]
+    assert replies[0]["id"] == 1
+    assert "protocolVersion" in replies[0]["result"]
     assert replies[1]["error"]["code"] == PARSE_ERROR
     assert [reply["id"] for reply in replies[2]] == [7, 8]
-    assert replies[3]["id"] == 2 and "tools" in replies[3]["result"]
+    assert replies[3]["id"] == 2
+    assert "tools" in replies[3]["result"]
     assert len(replies) == 4
 
 

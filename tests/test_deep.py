@@ -8,6 +8,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import TYPE_CHECKING, Any
 
+import pytest
 from click.testing import CliRunner
 
 from bytely.ai.deep import run_deep
@@ -32,8 +33,6 @@ from bytely.query.service import Workspace, ask_text
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    import pytest
 
 PRICING = '''\
 def price_with_tax(amount, rate):
@@ -137,9 +136,8 @@ def test_deep_build_writes_summaries_crux_and_concepts(tmp_path: Path) -> None:
 
     assert not result.degraded
     meaning = result.graph.meaning
-    assert meaning.pending == 0 and meaning.computed == len(
-        read_graph(str(repo / "bytely")).nodes
-    )
+    assert meaning.pending == 0
+    assert meaning.computed == len(read_graph(str(repo / "bytely")).nodes)
     graph = read_graph(str(repo / "bytely"))
     price = next(n for n in graph.nodes if n.name == "price_with_tax")
     assert price.summary == "Explains price_with_tax."
@@ -196,7 +194,8 @@ def test_meaning_is_carried_over_and_only_changes_are_resummarized(
     cart = next(n for n in graph.nodes if n.name == "cart_total")
     assert cart.summary == "Explains cart_total."  # kept as a hint
     fresh, message = check_graph(str(repo))
-    assert not fresh and "cart.py#cart_total" in message
+    assert not fresh
+    assert "cart.py#cart_total" in message
 
     model = ScriptedModel()
     result = _deep(repo, model)
@@ -234,7 +233,8 @@ def test_failure_gate_rules() -> None:
     gate.record("model returned nothing", quality=True)
     assert not gate.stopped
     gate.record("500 server error")
-    assert gate.stopped and "5 files in a row" in (gate.fatal or "")
+    assert gate.stopped
+    assert "5 files in a row" in (gate.fatal or "")
     assert terminal_reason("402 Payment Required") is not None
     assert terminal_reason("insufficient_quota") is not None
     assert terminal_reason("timeout") is None
@@ -278,14 +278,15 @@ def test_provider_resolution(monkeypatch: pytest.MonkeyPatch) -> None:
     assert config.headers == {"x-title": "bytely"}
     monkeypatch.delenv("OPENROUTER_API_KEY")
     plain = resolve_config(api_key="k")
-    assert plain.base_url is None and plain.model == "gpt-4o-mini"
+    assert plain.base_url is None
+    assert plain.model == "gpt-4o-mini"
     local = resolve_config("litellm")
-    assert local.base_url == "http://localhost:4000" and not needs_key(local)
+    assert local.base_url == "http://localhost:4000"
+    assert not needs_key(local)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "a-key")
     claude = resolve_config("anthropic")
-    assert (
-        claude.api_key == "a-key" and claude.key_source == "ANTHROPIC_API_KEY"
-    )
+    assert claude.api_key == "a-key"
+    assert claude.key_source == "ANTHROPIC_API_KEY"
 
 
 def test_recover_tool_args_variants() -> None:
@@ -322,19 +323,23 @@ def test_openai_payload_and_known_refusals() -> None:
 
     with_tool = {**params, "tools": [{"type": "function"}]}
     fixed = _adapt(with_tool, refusal("Invalid tool_choice type: 'object'"))
-    assert fixed is not None and fixed["tool_choice"] == "required"
+    assert fixed is not None
+    assert fixed["tool_choice"] == "required"
     fixed = _adapt(
         params,
         refusal("max_tokens is not supported; use max_completion_tokens"),
     )
-    assert fixed is not None and "max_completion_tokens" in fixed
+    assert fixed is not None
+    assert "max_completion_tokens" in fixed
     fixed = _adapt(params, refusal("temperature does not support 0.0"))
-    assert fixed is not None and "temperature" not in fixed
+    assert fixed is not None
+    assert "temperature" not in fixed
     fixed = _adapt(
         params,
         refusal("Function tools with reasoning_effort are not supported"),
     )
-    assert fixed is not None and fixed["reasoning_effort"] == "none"
+    assert fixed is not None
+    assert fixed["reasoning_effort"] == "none"
     assert _adapt(params, LLMError("400 other", 400)) is None
 
 
@@ -379,12 +384,9 @@ def test_http_retries_rate_limits_but_not_bad_keys() -> None:
         assert post_json(url, {}, {"authorization": "Bearer k"}) == {"ok": 1}
         assert seen == ["Bearer k", "Bearer k"]
         replies.append((401, {"error": {"message": "invalid api key"}}))
-        try:
+        with pytest.raises(LLMError, match="invalid api key") as caught:
             post_json(url, {}, {})
-        except LLMError as error:
-            assert error.status == 401 and "invalid api key" in str(error)
-        else:
-            raise AssertionError("expected a 401")
+        assert caught.value.status == 401
         assert not replies  # the 401 was not retried
     finally:
         server.shutdown()
@@ -458,7 +460,8 @@ def test_cli_deep_end_to_end_over_http(
         server.shutdown()
     assert result.exit_code == 0, result.output
     assert "Concepts: 2 nodes" in result.output
-    assert "pending" in result.output and "0 pending" in result.output
+    assert "pending" in result.output
+    assert "0 pending" in result.output
     assert (repo / "bytely" / "concepts" / "checkout-pricing.md").is_file()
 
 
@@ -499,7 +502,8 @@ def test_failed_concept_run_keeps_previous_concepts_and_notes(
 
     result = _deep(repo, FailingSynthesis())
 
-    assert result.degraded and result.concepts.kept_previous
+    assert result.degraded
+    assert result.concepts.kept_previous
     assert concepts.read_text("utf-8") == before
     assert (repo / "bytely" / "concepts" / "checkout-pricing.md").is_file()
 
@@ -521,7 +525,8 @@ def test_removed_concept_page_is_kept_only_for_user_notes(
 
     assert not (pages / "checkout-pricing.md").exists()  # default notes
     kept = noted.read_text("utf-8")
-    assert "orphaned: true" in kept and kept.endswith("MY NOTE\n")
+    assert "orphaned: true" in kept
+    assert kept.endswith("MY NOTE\n")
     build_graph(str(repo))  # stays kept, and no ownership conflict
     assert noted.read_text("utf-8") == kept
 
@@ -547,8 +552,10 @@ def test_crux_moves_with_its_definition(tmp_path: Path) -> None:
         for n in read_graph(str(repo / "bytely")).nodes
         if n.name == "price_with_tax"
     )
-    assert node.summary_state == "ready" and node.span == "L4-L9"
-    assert node.crux is not None and node.crux.span == "L5-L6"
+    assert node.summary_state == "ready"
+    assert node.span == "L4-L9"
+    assert node.crux is not None
+    assert node.crux.span == "L5-L6"
     out = ask_text(Workspace(repo), "price with tax", source=True, limit=1)
     assert '     5      """Apply the regional' in out
 
@@ -558,7 +565,8 @@ def test_partial_symbol_replies_count_as_failures(tmp_path: Path) -> None:
     result = _deep(repo, PartialCrux())
     meaning = result.graph.meaning
     assert result.degraded
-    assert meaning.failed_files == 1 and meaning.pending == 1
+    assert meaning.failed_files == 1
+    assert meaning.pending == 1
     assert any("left 1 of" in error for error in meaning.errors)
 
 
@@ -656,12 +664,9 @@ def test_server_retry_verdict_is_obeyed() -> None:
     url = f"http://127.0.0.1:{server.server_port}/x"
     try:
         assert post_json(url, {}, {}) == {"ok": 1}
-        try:
+        with pytest.raises(LLMError) as caught:  # the 503 fails at once
             post_json(url, {}, {})
-        except LLMError as error:
-            assert error.status == 503
-        else:
-            raise AssertionError("expected the 503 to fail at once")
+        assert caught.value.status == 503
         assert not replies
     finally:
         server.shutdown()
@@ -689,7 +694,8 @@ def test_ssl_context_adds_certifi_to_the_system_store(
     # certifi missing: the system store alone.
     monkeypatch.setattr(http, "certifi_bundle", lambda: None)
     context = http.build_ssl_context()
-    assert context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname
+    assert context.verify_mode == ssl.CERT_REQUIRED
+    assert context.check_hostname
     assert loaded == []
 
     # certifi present: its bundle is added on top of the system store.

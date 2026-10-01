@@ -40,20 +40,26 @@ CALLER_LINE = re.compile(r"calls ← (\S+) · \w+ · ([^:]+):L")
 # Per language: a callee/caller pair to add, and the callee's new name.
 PAIRS = {
     "python": (
-        "\n\ndef bench_callee():\n    return 1\n\n\n"
-        "def bench_caller():\n    return bench_callee()\n",
+        (
+            "\n\ndef bench_callee():\n    return 1\n\n\n"
+            "def bench_caller():\n    return bench_callee()\n"
+        ),
         ("bench_callee", "bench_caller", "bench_renamed"),
         ".py",
     ),
     "rust": (
-        "\nfn bench_callee() -> u32 {\n    1\n}\n\n"
-        "fn bench_caller() -> u32 {\n    bench_callee()\n}\n",
+        (
+            "\nfn bench_callee() -> u32 {\n    1\n}\n\n"
+            "fn bench_caller() -> u32 {\n    bench_callee()\n}\n"
+        ),
         ("bench_callee", "bench_caller", "bench_renamed"),
         ".rs",
     ),
     "javascript": (
-        "\nfunction benchCallee() {\n  return 1;\n}\n\n"
-        "function benchCaller() {\n  return benchCallee();\n}\n",
+        (
+            "\nfunction benchCallee() {\n  return 1;\n}\n\n"
+            "function benchCaller() {\n  return benchCallee();\n}\n"
+        ),
         ("benchCallee", "benchCaller", "benchRenamed"),
         ".js",
     ),

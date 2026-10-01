@@ -88,7 +88,8 @@ def test_find_file_accepts_relative_absolute_and_suffix_paths(
     root, graph = project
     for spelling in ("shop/cart.py", str(root / "shop" / "cart.py"), "cart.py"):
         node = find_file(graph, root, spelling)
-        assert node is not None and node.path == "shop/cart.py", spelling
+        assert node is not None, spelling
+        assert node.path == "shop/cart.py", spelling
     assert find_file(graph, root, "nope.py") is None
 
 
@@ -241,9 +242,11 @@ def test_find_file_keeps_leading_dots_and_rejects_parent_paths(
     graph = refresh_graph(str(tmp_path)).graph
 
     hidden = find_file(graph, tmp_path, ".config/tool.py")
-    assert hidden is not None and hidden.path == ".config/tool.py"
+    assert hidden is not None
+    assert hidden.path == ".config/tool.py"
     nested = find_file(graph, tmp_path, "./.config/tool.py")
-    assert nested is not None and nested.path == ".config/tool.py"
+    assert nested is not None
+    assert nested.path == ".config/tool.py"
     # `../tool.py` is outside the tree; it must not match `tool.py`.
     assert find_file(graph, tmp_path, "../tool.py") is None
 

@@ -156,7 +156,9 @@ def _call_tool(
     except NoGraphError:
         return _tool_result(request_id, NO_GRAPH, is_error=True)
     except Exception as error:  # noqa: BLE001 - reported to the agent
-        print(f"bytely: {tool.name} failed: {error!r}", file=sys.stderr)
+        print(  # noqa: T201 - stderr; stdout carries the protocol
+            f"bytely: {tool.name} failed: {error!r}", file=sys.stderr
+        )
         return _tool_result(
             request_id, f"{tool.name} failed: {error}", is_error=True
         )
