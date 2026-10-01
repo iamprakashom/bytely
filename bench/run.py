@@ -51,10 +51,12 @@ import time
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import IO, Any
+from typing import Any
 
 import psutil  # type: ignore[import-untyped]
 from fetch import BENCH_DIR, SIZES, load_corpus, select, tree_path
+
+from bytely.mcp.client import McpSession
 
 REFERENCE_FILE = BENCH_DIR / "reference.local.toml"
 SOURCE_EXTENSIONS = {".py", ".rs", ".js", ".mjs", ".cjs", ".jsx"}
@@ -265,77 +267,6 @@ def apply_scenario(
         raise ValueError(scenario)
 
 
-class McpSession:
-    """A long-lived MCP server over stdio, one JSON message per line."""
-
-    def __init__(self, command: list[str], cwd: Path, env: dict[str, str]):
-        """Start the server and complete the MCP handshake."""
-        self.process = subprocess.Popen(
-            command,
-            cwd=cwd,
-            env={**os.environ, **env},
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-        )
-        self.next_id = 0
-        self.request(
-            "initialize",
-            {
-                "protocolVersion": "2024-11-05",
-                "capabilities": {},
-                "clientInfo": {"name": "bytely-bench", "version": "0"},
-            },
-        )
-        self._send({"jsonrpc": "2.0", "method": "notifications/initialized"})
-        tools = self.request("tools/list", {}).get("tools", [])
-        self.tools = [tool["name"] for tool in tools]
-
-    def _send(self, message: dict[str, Any]) -> None:
-        stdin: IO[bytes] = self.process.stdin  # type: ignore[assignment]
-        stdin.write(json.dumps(message).encode("utf-8") + b"\n")
-        stdin.flush()
-
-    def request(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
-        """Send a request and return its result, skipping notifications."""
-        self.next_id += 1
-        self._send(
-            {
-                "jsonrpc": "2.0",
-                "id": self.next_id,
-                "method": method,
-                "params": params,
-            }
-        )
-        stdout: IO[bytes] = self.process.stdout  # type: ignore[assignment]
-        while True:
-            line = stdout.readline()
-            if not line:
-                raise RuntimeError(f"MCP server closed during {method}")
-            message = json.loads(line)
-            if message.get("id") != self.next_id:
-                continue
-            if "error" in message:
-                raise RuntimeError(f"{method}: {message['error']}")
-            result: dict[str, Any] = message.get("result", {})
-            if result.get("isError"):
-                raise RuntimeError(f"{method}: {result.get('content')}")
-            return result
-
-    def tool_for(self, suffix: str) -> str | None:
-        """The server's tool whose name ends with `suffix`."""
-        return next((t for t in self.tools if t.endswith(suffix)), None)
-
-    def close(self) -> None:
-        """Stop the server."""
-        if self.process.stdin:
-            self.process.stdin.close()
-        try:
-            self.process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            self.process.kill()
-
-
 def measure_mcp(
     tool: Tool, work: Path, queries: dict[str, str], count: int
 ) -> dict[str, list[float]]:
@@ -357,9 +288,7 @@ def measure_mcp(
             kind, name, arguments = calls[index % len(calls)]
             began = time.perf_counter()
             try:
-                session.request(
-                    "tools/call", {"name": name, "arguments": arguments}
-                )
+                session.call(name, arguments)
             except RuntimeError:
                 results.setdefault(f"mcp_{kind}_failed", []).append(1.0)
                 continue

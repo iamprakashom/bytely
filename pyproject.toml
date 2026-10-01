@@ -110,9 +110,12 @@ disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["-p", "no:cacheprovider"]
+# `integration` tests need the benchmark corpus (bench/fetch.py) and run
+# only when asked for: `pytest -m integration`.
+addopts = ["-p", "no:cacheprovider", "-m", "not integration"]
 asyncio_mode = "auto"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "parity: golden-file parity tests against TypeScript baseline",
+    "integration: real repositories from bench/corpus.toml (fetch first)",
 ]
