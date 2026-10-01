@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import io
+import json
 import sys
 import urllib.error
 from collections.abc import Callable
@@ -171,6 +172,128 @@ def test_parse_repo(url: str) -> None:
 def test_parse_repo_rejects_other_hosts() -> None:
     with pytest.raises(ValueError, match="not a GitHub repository URL"):
         pr_report.parse_repo("https://gitlab.com/a/b")
+
+
+def _summary(tmp_path: Path, name: str, files: dict[str, str]) -> Any:
+    root = _reports(tmp_path / name, files)
+    return pr_report.summarize(pr_report.parse_reports(root), f"{name}0000")
+
+
+def test_summary_round_trips_through_a_file(tmp_path: Path) -> None:
+    summary = _summary(tmp_path, "base", {"test-3.11/junit.xml": JUNIT})
+    job = summary["jobs"]["test-3.11"]
+    assert (job["passed"], job["failed"], job["errors"], job["skipped"]) == (
+        2,
+        1,
+        1,
+        1,
+    )
+    assert job["tests"] == sorted(job["tests"])
+    assert "tests.test_b::test_bad[rust]" in job["tests"]
+
+    path = tmp_path / "summary.json"
+    path.write_text(json.dumps(summary), "utf-8")
+    assert pr_report.load_baseline(path) == summary
+
+
+@pytest.mark.parametrize(
+    "text",
+    [None, "not json", '{"version": 99, "jobs": {}}', "[]"],
+    ids=["missing", "not-json", "other-version", "not-an-object"],
+)
+def test_unusable_baseline_is_ignored(tmp_path: Path, text: str | None) -> None:
+    path = tmp_path / "summary.json"
+    if text is not None:
+        path.write_text(text, "utf-8")
+    assert pr_report.load_baseline(path) is None
+
+
+def test_render_shows_changes_since_the_baseline(tmp_path: Path) -> None:
+    baseline = _summary(tmp_path, "base", {"test-3.11/junit.xml": PASSING})
+    root = _reports(tmp_path / "now", {"test-3.11/junit.xml": JUNIT})
+    body = pr_report.render(
+        pr_report.parse_reports(root), sha="abc1234", baseline=baseline
+    )
+    # Five tests are new and the one the baseline had is gone.
+    assert (
+        "Compared with `main` at `base000`: +4 tests (5 added, 1 removed)"
+        in (body)
+    )
+    assert "| test-3.11 ❌ | 2 (+1) | 2 (+2) | 1 (+1) | 12s |" in body
+    assert "<summary>Added tests (5)</summary>" in body
+    assert "- `tests.test_b::test_bad[rust]`" in body
+    assert "<summary>Removed tests (1)</summary>" in body
+    assert "- `tests.test_live::test_live`" in body
+
+
+def test_render_unchanged_run_and_new_job(tmp_path: Path) -> None:
+    baseline = _summary(tmp_path, "base", {"test-3.11/junit.xml": PASSING})
+    root = _reports(
+        tmp_path / "now",
+        {
+            "test-3.11/junit.xml": PASSING,
+            "integration-linux/junit.xml": PASSING,
+        },
+    )
+    body = pr_report.render(
+        pr_report.parse_reports(root), sha="abc1234", baseline=baseline
+    )
+    assert "no tests added or removed" in body
+    assert "| test-3.11 | 1 | 0 | 0 | 3s |" in body
+    # A job the baseline did not have shows plain counts, marked new.
+    assert "| integration-linux (new) | 1 | 0 | 0 | 3s |" in body
+    assert "Added tests" not in body
+    assert "Removed tests" not in body
+
+
+def test_render_says_when_no_baseline_exists(tmp_path: Path) -> None:
+    root = _reports(tmp_path, {"test-3.11/junit.xml": PASSING})
+    body = pr_report.render(
+        pr_report.parse_reports(root), sha="abc1234", baseline_missing=True
+    )
+    assert "_No `main` baseline yet, so changes are not shown._" in body
+
+
+def test_lists_of_tests_are_capped(tmp_path: Path) -> None:
+    cases = "".join(
+        f'<testcase classname="t" name="test_{i:03d}" time="0"/>'
+        for i in range(pr_report.MAX_LISTED_TESTS + 7)
+    )
+    baseline = _summary(tmp_path, "base", {"job/junit.xml": PASSING})
+    root = _reports(
+        tmp_path / "now",
+        {"job/junit.xml": f'<testsuite time="1">{cases}</testsuite>'},
+    )
+    body = pr_report.render(
+        pr_report.parse_reports(root), sha="abc1234", baseline=baseline
+    )
+    assert "- … and 7 more" in body
+
+
+def test_cli_writes_a_summary_and_compares_with_a_baseline(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = _reports(tmp_path, {"test-3.13/junit.xml": PASSING})
+    common = [
+        str(root),
+        "--repo-url",
+        "https://github.com/iamprakashom/bytely",
+        "--branch",
+        "main",
+        "--sha",
+        "feed1234",
+        "--dry-run",
+    ]
+    saved = tmp_path / "stats" / "main.json"
+    assert pr_report.main([*common, "--write-summary", str(saved)]) == 0
+    assert pr_report.load_baseline(saved) is not None
+
+    missing = tmp_path / "absent.json"
+    assert pr_report.main([*common, "--baseline", str(missing)]) == 0
+    assert "No `main` baseline yet" in capsys.readouterr().out
+
+    assert pr_report.main([*common, "--baseline", str(saved)]) == 0
+    assert "Compared with `main` at `feed123`" in capsys.readouterr().out
 
 
 class FakeGitHub:

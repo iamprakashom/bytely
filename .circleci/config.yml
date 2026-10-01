@@ -176,6 +176,8 @@ jobs:
     # Posts the test jobs' results to the branch's open pull request. Runs
     # after them whatever their outcome; needs GITHUB_TOKEN from the
     # `bytely-github` context (forks get none, and the report is skipped).
+    # On main there is no pull request: it saves the run's summary instead,
+    # which pull requests restore to show how the tests changed.
     executor: linux
     steps:
       - checkout
@@ -189,6 +191,16 @@ jobs:
           keys:
             - uv-linux-3.13-{{ checksum "uv.lock" }}
             - uv-linux-3.13-
+      - when:
+          condition:
+            not:
+              equal: [main, << pipeline.git.branch >>]
+          steps:
+            # The newest main summary: a key prefix restores the most
+            # recently saved cache that matches it.
+            - restore_cache:
+                keys:
+                  - test-stats-main-
       - run:
           name: Post test results to the pull request
           command: |
@@ -197,7 +209,20 @@ jobs:
               --branch "<< pipeline.git.branch >>" \
               --sha "<< pipeline.git.revision >>" \
               --workflow-url "https://app.circleci.com/pipelines/workflows/$CIRCLE_WORKFLOW_ID" \
-              --expect test-linux-py3.11,test-linux-py3.12,test-linux-py3.13,test-linux-py3.14,test-windows-py3.13,integration-linux
+              --expect test-linux-py3.11,test-linux-py3.12,test-linux-py3.13,test-linux-py3.14,test-windows-py3.13,integration-linux \
+              --baseline test-stats/main.json \
+              --write-summary test-stats/current.json
+      - when:
+          condition:
+            equal: [main, << pipeline.git.branch >>]
+          steps:
+            - run:
+                name: Keep this run's summary as the main baseline
+                command: cp test-stats/current.json test-stats/main.json
+            - save_cache:
+                key: test-stats-main-{{ .Revision }}
+                paths:
+                  - test-stats/main.json
 
 workflows:
   ci:
@@ -223,6 +248,3 @@ workflows:
             - test-linux-py3.14: terminal
             - test-windows-py3.13: terminal
             - integration-linux: terminal
-          filters:
-            branches:
-              ignore: main
