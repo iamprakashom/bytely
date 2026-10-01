@@ -182,6 +182,13 @@ jobs:
       - attach_workspace:
           at: .
       - install-uv
+      # The Python 3.13 that test-linux-py3.13 cached (it always runs first),
+      # so this job doesn't download Python; the prefix key still finds it
+      # after uv.lock changes. Without a cache hit, uv downloads as before.
+      - restore_cache:
+          keys:
+            - uv-linux-3.13-{{ checksum "uv.lock" }}
+            - uv-linux-3.13-
       - run:
           name: Post test results to the pull request
           command: |
