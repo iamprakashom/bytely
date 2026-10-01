@@ -1268,11 +1268,10 @@ def extract_file(path: str, source: str) -> ExtractResult:
     else:
         tree = get_parser(lang).parse(source_bytes)
     line_starts = [0]
-    line_starts.extend(
-        index + 1
-        for index, byte in enumerate(source_bytes)
-        if byte == ord("\n")
-    )
+    newline = source_bytes.find(b"\n")
+    while newline != -1:
+        line_starts.append(newline + 1)
+        newline = source_bytes.find(b"\n", newline + 1)
 
     def line_number(byte_offset: int) -> int:
         return bisect_right(line_starts, byte_offset)

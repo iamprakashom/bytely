@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from bytely.graph.extract_cache import current_extractor_fingerprint
+from bytely.graph import extract_cache
 from bytely.graph.write import graph_path, read_graph
 from bytely.util import lock
 
@@ -60,6 +60,12 @@ class BuildState:
     fingerprint: str | None = None
     include_patterns: tuple[str, ...] = ()
     exclude_patterns: tuple[str, ...] = ()
+    # A stamp of the outputs and their other inputs, the graph's size
+    # (files, nodes, edges), and its meaning counts (ready, pending, stale),
+    # so a build of an unchanged tree can skip its work and still report.
+    outputs: str | None = None
+    counts: tuple[int, int, int] | None = None
+    meaning: tuple[int, int, int] | None = None
 
 
 def tree_fingerprint(
@@ -70,7 +76,7 @@ def tree_fingerprint(
 ) -> str:
     """Hash what a build's output depends on, without reading any file."""
     digest = hashlib.sha256()
-    digest.update(current_extractor_fingerprint().encode())
+    digest.update(extract_cache.current_extractor_fingerprint().encode())
     digest.update(
         json.dumps([list(include_patterns), list(exclude_patterns)]).encode()
     )
@@ -98,20 +104,32 @@ def save_tree_fingerprint(
     fingerprint: str,
     include_patterns: Iterable[str] = (),
     exclude_patterns: Iterable[str] = (),
+    *,
+    outputs: str | None = None,
+    counts: tuple[int, int, int] | None = None,
+    meaning: tuple[int, int, int] | None = None,
 ) -> None:
-    """Record the snapshot a build was made from, and its file selection."""
+    """Record the snapshot a build was made from, and its file selection.
+
+    `outputs` (a stamp of the files written and their other inputs),
+    `counts` (files, nodes, edges), and `meaning` (ready, pending, stale)
+    describe what the build wrote; they are optional and only let a later
+    build of the same snapshot skip its work.
+    """
     path = Path(context_dir) / TREE_FINGERPRINT_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(
-            {
-                "tree": fingerprint,
-                "include": list(include_patterns),
-                "exclude": list(exclude_patterns),
-            }
-        ),
-        "utf-8",
-    )
+    data: dict[str, object] = {
+        "tree": fingerprint,
+        "include": list(include_patterns),
+        "exclude": list(exclude_patterns),
+    }
+    if outputs is not None:
+        data["outputs"] = outputs
+    if counts is not None:
+        data["counts"] = list(counts)
+    if meaning is not None:
+        data["meaning"] = list(meaning)
+    path.write_text(json.dumps(data), "utf-8")
 
 
 def load_build_state(context_dir: str) -> BuildState:
@@ -131,11 +149,25 @@ def load_build_state(context_dir: str) -> BuildState:
             return tuple(value)
         return ()
 
+    def triple(key: str) -> tuple[int, int, int] | None:
+        value = data.get(key)
+        if (
+            isinstance(value, list)
+            and len(value) == 3
+            and all(type(n) is int for n in value)
+        ):
+            return (value[0], value[1], value[2])
+        return None
+
     fingerprint = data.get("tree")
+    outputs = data.get("outputs")
     return BuildState(
         fingerprint if isinstance(fingerprint, str) else None,
         patterns("include"),
         patterns("exclude"),
+        outputs if isinstance(outputs, str) else None,
+        triple("counts"),
+        triple("meaning"),
     )
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import os
-from dataclasses import asdict
+from dataclasses import fields
 from functools import cache
 from importlib import metadata
 from pathlib import Path
@@ -91,6 +91,20 @@ def _package_version(distribution: str) -> str:
         return "missing"
 
 
+_EDGE_FIELDS = tuple(field.name for field in fields(RawEdge))
+
+
+def _edge_dict(edge: RawEdge) -> dict[str, Any]:
+    """`dataclasses.asdict` for a RawEdge, without its recursive copying.
+
+    The only mutable field is `kinds`, a flat list, copied here.
+    """
+    data = {name: getattr(edge, name) for name in _EDGE_FIELDS}
+    if edge.kinds is not None:
+        data["kinds"] = list(edge.kinds)
+    return data
+
+
 class ExtractionCache:
     """Persist and retrieve content-hash keyed extraction results."""
 
@@ -136,13 +150,55 @@ class ExtractionCache:
             self.dirty = True
             return None
 
-    def set(self, path: str, source_hash: str, result: ExtractResult) -> None:
-        """Store an extraction result under its path and hash."""
-        self.entries[path] = {
+    def get_unchanged(
+        self, path: str, size: int, mtime_ns: int
+    ) -> ExtractResult | None:
+        """Return the cached result when the file's size and mtime match.
+
+        This trusts the stat the way a refresh does, so an unchanged file is
+        reused without being read or hashed.
+        """
+        entry = self.entries.get(path)
+        if not isinstance(entry, dict) or entry.get("stat") != [size, mtime_ns]:
+            return None
+        return self.get(path, entry.get("source_hash", ""))
+
+    def set_stat(self, path: str, stat: tuple[int, int] | None) -> None:
+        """Record the stat an existing entry's source was read under.
+
+        `None` (a stat too recent to trust) clears any recorded one.
+        """
+        entry = self.entries.get(path)
+        if not isinstance(entry, dict):
+            return
+        recorded = list(stat) if stat is not None else None
+        if entry.get("stat") != recorded:
+            if recorded is None:
+                entry.pop("stat", None)
+            else:
+                entry["stat"] = recorded
+            self.dirty = True
+
+    def set(
+        self,
+        path: str,
+        source_hash: str,
+        result: ExtractResult,
+        stat: tuple[int, int] | None = None,
+    ) -> None:
+        """Store an extraction result under its path and hash.
+
+        `stat` is the file's (size, mtime_ns) when it was read, which lets
+        `get_unchanged` reuse the result without reading the file again.
+        """
+        entry: dict[str, Any] = {
             "source_hash": source_hash,
             "nodes": [node.to_dict() for node in result.nodes],
-            "raw_edges": [asdict(edge) for edge in result.raw_edges],
+            "raw_edges": [_edge_dict(edge) for edge in result.raw_edges],
         }
+        if stat is not None:
+            entry["stat"] = list(stat)
+        self.entries[path] = entry
         self.dirty = True
 
     def retain(self, paths: Container[str]) -> None:

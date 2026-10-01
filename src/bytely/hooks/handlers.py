@@ -54,17 +54,6 @@ if TYPE_CHECKING:
 MIN_PROMPT_CHARS = 12
 SYNC_TOKEN_ENV = "BYTELY_SYNC_TOKEN"
 LOCK_HEARTBEAT_SECONDS = 60.0
-EVENTS = (
-    "session-start",
-    "prompt",
-    "post-edit",
-    "tool-savings",
-    "stop",
-    "cursor-post-tool",
-    "cursor-mcp",
-    "cursor-session-end",
-    "sync",
-)
 HOOK_MARKER = "bytely hook "
 _EVENT_NAMES = {
     "session-start": "SessionStart",

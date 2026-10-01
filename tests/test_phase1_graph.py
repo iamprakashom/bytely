@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 import re
+import time
 from pathlib import Path
 
 import pytest
@@ -275,6 +278,224 @@ def test_changed_extractor_fingerprint_invalidates_the_cache(
     )
     rebuilt = build_graph(str(tmp_path))
     assert (rebuilt.cache_hits, rebuilt.cache_misses) == (0, 1)
+
+
+def test_cached_edges_serialize_like_asdict() -> None:
+    from dataclasses import asdict
+
+    from bytely.graph.extract import RawEdge
+    from bytely.graph.extract_cache import _edge_dict
+
+    edge = RawEdge(
+        source="a.py#f", relation="calls", file="a.py", kinds=["function"]
+    )
+    data = _edge_dict(edge)
+    assert data == asdict(edge)
+    assert data["kinds"] is not edge.kinds
+
+
+def _write_aged(path: Path, text: str, mtime_ns: int | None = None) -> None:
+    """Write a file whose mtime is old enough for a build to trust it."""
+    path.write_text(text, "utf-8")
+    old = mtime_ns if mtime_ns is not None else time.time_ns() - 60 * 10**9
+    os.utime(path, ns=(old, old))
+
+
+def test_build_of_an_unchanged_tree_reads_no_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_aged(tmp_path / "a.py", "def a():\n    return 1\n")
+    first = build_graph(str(tmp_path))
+
+    def no_reads(self: Path) -> bytes:
+        raise AssertionError(f"read {self}")
+
+    monkeypatch.setattr(Path, "read_bytes", no_reads)
+    again = build_graph(str(tmp_path))
+    assert (again.files, again.nodes, again.edges) == (
+        first.files,
+        first.nodes,
+        first.edges,
+    )
+
+
+def test_build_reads_only_files_whose_stat_changed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_aged(tmp_path / "a.py", "def a():\n    return 1\n")
+    _write_aged(tmp_path / "b.py", "def b():\n    return 2\n")
+    build_graph(str(tmp_path))
+    (tmp_path / "b.py").write_text("def b():\n    return 3\n", "utf-8")
+
+    read: list[str] = []
+    original = Path.read_bytes
+
+    def tracking(self: Path) -> bytes:
+        read.append(self.name)
+        return original(self)
+
+    monkeypatch.setattr(Path, "read_bytes", tracking)
+    result = build_graph(str(tmp_path))
+    assert "a.py" not in read and "b.py" in read
+    assert (result.cache_hits, result.cache_misses) == (1, 1)
+
+
+def test_build_rewrites_a_deleted_index(
+    tmp_path: Path,
+) -> None:
+    _write_aged(tmp_path / "a.py", "def a():\n    return 1\n")
+    build_graph(str(tmp_path))
+    index = tmp_path / "bytely" / "INDEX.md"
+    index.unlink()
+    build_graph(str(tmp_path))
+    assert index.is_file()
+
+
+def test_build_restores_a_card_deleted_or_edited_by_hand(
+    tmp_path: Path,
+) -> None:
+    _write_aged(tmp_path / "a.py", "def a():\n    return 1\n")
+    _write_aged(tmp_path / "b.py", "def b():\n    return 2\n")
+    build_graph(str(tmp_path))
+    card_a = tmp_path / "bytely" / "a.md"
+    card_b = tmp_path / "bytely" / "b.md"
+    original = card_b.read_text("utf-8")
+    card_a.unlink()
+    card_b.write_text("edited by hand\n", "utf-8")
+
+    build_graph(str(tmp_path))
+    assert card_a.is_file()
+    assert card_b.read_text("utf-8") == original
+
+
+def _count_full_builds(monkeypatch: pytest.MonkeyPatch) -> list[int]:
+    """Count builds that do the work (the no-change shortcut writes none)."""
+    import bytely.graph.build as build_module
+
+    calls: list[int] = []
+    original = build_module.write_outputs
+
+    def counting(*args: object, **kwargs: object) -> None:
+        calls.append(1)
+        original(*args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(build_module, "write_outputs", counting)
+    return calls
+
+
+def test_stale_card_that_is_the_index_on_this_filesystem_is_kept(
+    tmp_path: Path,
+) -> None:
+    # A graph built before `index.js` got `index.js.md` listed `index.md`
+    # as a card; on Windows and macOS that path *is* INDEX.md.
+    _write_aged(tmp_path / "index.js", "function a() { return 1; }\n")
+    build_graph(str(tmp_path))
+    manifest = tmp_path / "bytely" / "cache" / "cards.json"
+    names = json.loads(manifest.read_text("utf-8"))
+    manifest.write_text(json.dumps([*names, "index.md"]), "utf-8")
+    _write_aged(tmp_path / "index.js", "function b() { return 2; }\n")
+
+    build_graph(str(tmp_path))
+    assert (tmp_path / "bytely" / "INDEX.md").is_file()
+    assert (tmp_path / "bytely" / "index.js.md").is_file()
+
+
+def test_upgraded_build_code_redoes_an_unchanged_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import bytely.graph.build as build_module
+
+    _write_aged(tmp_path / "a.py", "def a():\n    return 1\n")
+    build_graph(str(tmp_path))
+    full = _count_full_builds(monkeypatch)
+    build_graph(str(tmp_path))
+    assert full == []  # unchanged: the shortcut
+
+    monkeypatch.setattr(
+        build_module, "pipeline_fingerprint", lambda: "a-newer-bytely"
+    )
+    build_graph(str(tmp_path))
+    assert full == [1]
+
+
+def test_new_project_manifest_updates_scopes_without_source_changes(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "web").mkdir()
+    _write_aged(tmp_path / "web" / "a.js", "function a() { return 1; }\n")
+    build_graph(str(tmp_path))
+    (tmp_path / "web" / "package.json").write_text("{}", "utf-8")
+
+    build_graph(str(tmp_path))
+    graph = read_graph(str(tmp_path / "bytely"))
+    assert "web/" in {scope.prefix for scope in graph.scopes}
+
+
+def test_output_formats_may_be_a_one_shot_iterator(tmp_path: Path) -> None:
+    (tmp_path / "a.py").write_text("def a():\n    return 1\n", "utf-8")
+    build_graph(str(tmp_path), output_formats=iter(["markdown"]))
+    assert (tmp_path / "bytely" / "INDEX.md").is_file()
+    assert (tmp_path / "bytely" / "a.md").is_file()
+
+
+def test_unchanged_build_reports_the_meaning_a_full_build_would(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import bytely.graph.build as build_module
+
+    _write_aged(tmp_path / "a.py", "def a():\n    return 1\n")
+    build_graph(str(tmp_path))
+    full = _count_full_builds(monkeypatch)
+    shortcut = build_graph(str(tmp_path))
+    assert full == []
+
+    monkeypatch.setattr(build_module, "pipeline_fingerprint", lambda: "x")
+    rebuilt = build_graph(str(tmp_path))
+    assert full == [1]
+    assert shortcut.meaning is not None
+    assert shortcut.meaning == rebuilt.meaning
+
+
+def test_card_names_never_collide_case_insensitively() -> None:
+    from bytely.graph.outputs import card_paths
+
+    cards = card_paths(["index.js", "src/Util.py", "src/util.js", "a.py"])
+    assert cards["index.js"] == "index.js.md"  # INDEX.md is the root index
+    assert cards["src/Util.py"] == "src/Util.py.md"
+    assert cards["src/util.js"] == "src/util.js.md"
+    assert cards["a.py"] == "a.md"
+
+
+def test_build_rereads_a_same_size_edit_made_right_after_a_build(
+    tmp_path: Path,
+) -> None:
+    # Saved within its mtime's resolution of the build, a same-size edit
+    # can keep the same stat; a fresh file is never trusted by stat.
+    source = tmp_path / "a.py"
+    source.write_text("def a():\n    return 1\n", "utf-8")
+    stamp = source.stat().st_mtime_ns
+    build_graph(str(tmp_path))
+    source.write_text("def b():\n    return 1\n", "utf-8")
+    os.utime(source, ns=(stamp, stamp))
+
+    build_graph(str(tmp_path))
+    names = {n.name for n in read_graph(str(tmp_path / "bytely")).nodes}
+    assert "b" in names and "a" not in names
+
+
+def test_check_reads_every_file_even_when_its_stat_is_unchanged(
+    tmp_path: Path,
+) -> None:
+    # A tool that restores mtimes can hide a same-size edit from the
+    # stat shortcut; `check` compares against a rebuild that reads files.
+    source = tmp_path / "a.py"
+    _write_aged(source, "def a():\n    return 1\n")
+    stamp = source.stat().st_mtime_ns
+    build_graph(str(tmp_path))
+    _write_aged(source, "def b():\n    return 1\n", stamp)
+
+    fresh, message = check_graph(str(tmp_path))
+    assert not fresh, message
 
 
 def test_check_no_cache_catches_a_stale_cache_that_check_calls_fresh(
@@ -665,7 +886,7 @@ def test_check_command_uses_nearest_bytely_root_when_directory_is_omitted(
         return True, "Graph is up to date."
 
     monkeypatch.chdir(start)
-    monkeypatch.setattr("bytely.cli.check_graph", fake_check_graph)
+    monkeypatch.setattr("bytely.graph.check.check_graph", fake_check_graph)
     result = CliRunner().invoke(main, ["check"])
 
     assert result.exit_code == 0

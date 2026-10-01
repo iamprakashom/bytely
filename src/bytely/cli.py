@@ -1,32 +1,34 @@
-"""Command-line interface for Bytely."""
+"""Command-line interface for Bytely.
+
+Each command imports what it runs when it runs, so startup (`--version`,
+`--help`, and every command) pays only for click and the command itself.
+"""
+
+from __future__ import annotations
 
 import io
 import json
 import sys
-from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import click
 
-from bytely.graph.build import build_graph
-from bytely.graph.check import check_graph
-from bytely.hooks.handlers import EVENTS, run_hook
-from bytely.hooks.metrics import format_session_stats
-from bytely.hooks.state import latest_session
+from bytely.hooks import EVENTS
 from bytely.hosts.registry import HOST_IDS, HOSTS
-from bytely.hosts.wiring import Change, run_init, run_uninstall
-from bytely.mcp.server import serve
-from bytely.query.service import (
-    QueryError,
-    Workspace,
-    ask_text,
-    callers_text,
-    grep_text,
-    map_text,
-    repo_root,
-    skeleton_text,
-)
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from bytely.hosts.wiring import Change
+    from bytely.query.service import Workspace
+
+
+def repo_root(directory: str | None) -> Path:
+    """The repository a command acts on (see `bytely.query.service`)."""
+    from bytely.query.service import repo_root
+
+    return repo_root(directory)
 
 
 @click.group()
@@ -130,6 +132,8 @@ def build(
             allow_partial,
         )
         return
+    from bytely.graph.build import build_graph
+
     try:
         result = build_graph(
             root,
@@ -293,6 +297,8 @@ def check(
     no_cache: bool,
 ) -> None:
     """Check whether the saved graph matches the repository."""
+    from bytely.graph.check import check_graph
+
     try:
         fresh, message = check_graph(
             str(repo_root(directory)),
@@ -312,11 +318,15 @@ def check(
 
 
 def _workspace(ctx: click.Context, root: str | None) -> Workspace:
+    from bytely.query.service import Workspace
+
     return Workspace(repo_root(root), ctx.obj.get("context_dir"))
 
 
 def _run(query: Callable[[], str]) -> None:
     """Print a query's answer, or its error as a CLI error."""
+    from bytely.query.service import QueryError
+
     try:
         text = query()
     except QueryError as error:
@@ -347,6 +357,8 @@ def map_command(
 ) -> None:
     """Print a short orientation: folders, hubs, and hotspots."""
     workspace = _workspace(ctx, directory)
+    from bytely.query.service import map_text
+
     _run(lambda: map_text(workspace, max_dirs))
 
 
@@ -357,6 +369,8 @@ def map_command(
 def skeleton(ctx: click.Context, file: str, root: str | None) -> None:
     """List a file's definitions with their spans and signatures."""
     workspace = _workspace(ctx, root)
+    from bytely.query.service import skeleton_text
+
     _run(lambda: skeleton_text(workspace, file))
 
 
@@ -391,6 +405,8 @@ def callers(
     SYMBOL may be a file path, which stands for everything defined in it.
     """
     workspace = _workspace(ctx, root)
+    from bytely.query.service import callers_text
+
     _run(
         lambda: callers_text(
             workspace, symbol, direction=direction, depth=depth, scope=scope
@@ -415,6 +431,8 @@ def grep(
 ) -> None:
     """Find every match in the indexed files, grouped by enclosing symbol."""
     workspace = _workspace(ctx, root)
+    from bytely.query.service import grep_text
+
     _run(
         lambda: grep_text(
             workspace,
@@ -447,6 +465,8 @@ def ask(
 ) -> None:
     """Rank definitions for a question, with the code if asked."""
     workspace = _workspace(ctx, root)
+    from bytely.query.service import ask_text
+
     _run(
         lambda: ask_text(
             workspace,
@@ -472,6 +492,9 @@ def mcp(ctx: click.Context, directory: str | None) -> None:
     The server never indexes a directory by itself: where there is no graph
     yet, it offers no tools until `bytely build` has run.
     """
+    from bytely.mcp.server import serve
+    from bytely.query.service import Workspace
+
     serve(
         Workspace(
             repo_root(directory), ctx.obj.get("context_dir"), create=False
@@ -501,6 +524,8 @@ def hook(event: str, user_level: bool) -> None:
     reported on stderr and the exit code is always 0.
     """
     try:
+        from bytely.hooks.handlers import run_hook
+
         out = run_hook(event, _stdin_json(), user_level=user_level)
     except Exception as error:  # noqa: BLE001 - a hook must not break a turn
         click.echo(f"bytely hook {event}: {error}", err=True)
@@ -529,6 +554,9 @@ def statusline() -> None:
 @click.option("--json", "as_json", is_flag=True, help="Print raw JSON")
 def stats(directory: str | None, as_json: bool) -> None:
     """Show the latest agent session's bytely reads and tokens saved."""
+    from bytely.hooks.metrics import format_session_stats
+    from bytely.hooks.state import latest_session
+
     session = latest_session(repo_root(directory))
     if as_json:
         click.echo(json.dumps(session, indent=2))
@@ -635,6 +663,8 @@ def init(
         for host in HOSTS:
             click.echo(f"{host.id:12} {host.name}")
         return
+    from bytely.hosts.wiring import run_init
+
     root = Path(directory or Path.cwd()).resolve()
     report = run_init(
         root,
@@ -711,6 +741,8 @@ def uninstall(
     Without --yes this only lists what would be removed.
     """
     root = Path(directory or Path.cwd()).resolve()
+    from bytely.hosts.wiring import run_uninstall
+
     changes = run_uninstall(
         root,
         Path.home(),

@@ -10,7 +10,9 @@ is `markdown`: one card per source file, mirroring the source tree, plus an
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 from collections import Counter
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Any, Protocol
@@ -22,9 +24,14 @@ if TYPE_CHECKING:
 
 DEFAULT_FORMATS: tuple[str, ...] = ("markdown",)
 MAX_SIGNATURE_CHARS = 200
+# The root index; no card may take its name (see `card_paths`).
+INDEX_FILE = "INDEX.md"
 # Cards this writer created, so a rebuild deletes only its own stale files and
 # never a user's markdown when the output directory is shared (`--dir`).
 CARD_MANIFEST = Path("cache") / "cards.json"
+# Each written file's content hash, size, and mtime: a file whose content
+# and stat are unchanged is not read back to compare.
+CARD_STAMPS = Path("cache") / "card-stamps.json"
 
 
 class OutputWriter(Protocol):
@@ -78,7 +85,7 @@ class MarkdownWriter:
                 orphan = render_orphan(name, _existing(output_dir / name))
                 if orphan is not None:
                     files[name] = orphan
-        files["INDEX.md"] = render_index(
+        files[INDEX_FILE] = render_index(
             len(cards), graph, languages, concepts, concept_files
         )
 
@@ -98,9 +105,17 @@ class MarkdownWriter:
                 f"{shown}{more}. Use an empty or dedicated output directory."
             )
 
+        stamps = _read_stamps(output_dir)
+        written: dict[str, list[Any]] = {}
         for name, text in files.items():
-            _write_if_changed(output_dir / name, text)
+            written[name] = _write_stamped(
+                output_dir / name, text, stamps.get(name)
+            )
         _remove_stale_cards(output_dir, previous, set(files))
+        if written != stamps:
+            _write_if_changed(
+                output_dir / CARD_STAMPS, json.dumps(written, sort_keys=True)
+            )
 
 
 WRITERS: dict[str, OutputWriter] = {"markdown": MarkdownWriter()}
@@ -127,11 +142,18 @@ def card_paths(sources: Iterable[str]) -> dict[str, str]:
     two sources would share a card (`a.js` and `a.ts`), both keep their
     extension instead (`a.js.md`, `a.ts.md`), so the mapping stays one to
     one and does not depend on processing order.
+
+    Names are compared case-insensitively, since on Windows and macOS
+    `Util.md` and `util.md` are one file, and the root `INDEX.md` is taken:
+    a root `index.js` gets `index.js.md` rather than overwriting the index.
     """
     paths = sorted(sources)
-    stems = Counter(_stem_card(path) for path in paths)
+    stems = Counter(_stem_card(path).casefold() for path in paths)
+    stems[INDEX_FILE.casefold()] += 1
     return {
-        path: _stem_card(path) if stems[_stem_card(path)] == 1 else f"{path}.md"
+        path: _stem_card(path)
+        if stems[_stem_card(path).casefold()] == 1
+        else f"{path}.md"
         for path in paths
     }
 
@@ -386,6 +408,58 @@ def _write_if_changed(path: Path, text: str) -> None:
     path.write_bytes(data)
 
 
+def _write_stamped(path: Path, text: str, stamp: Any) -> list[Any]:
+    """Write `text` unless the stamp shows the file already holds it.
+
+    Returns the file's new stamp: [content hash, size, mtime_ns]. A file
+    edited by hand since its stamp has a different stat, so it is read and
+    rewritten as before.
+    """
+    data = text.encode("utf-8")
+    digest = hashlib.sha1(data, usedforsecurity=False).hexdigest()
+    try:
+        stat = os.stat(path)
+        if stamp == [digest, stat.st_size, stat.st_mtime_ns]:
+            return stamp  # type: ignore[no-any-return]
+    except OSError:
+        pass
+    _write_if_changed(path, text)
+    stat = os.stat(path)
+    return [digest, stat.st_size, stat.st_mtime_ns]
+
+
+def outputs_intact(output_dir: Path, formats: Iterable[str]) -> bool:
+    """Whether every file the last write produced is still as written.
+
+    Compares each file's size and mtime with its stamp, without reading it,
+    so a card deleted or edited by hand makes the next build rewrite it.
+    """
+    if "markdown" not in formats:
+        return True
+    stamps = _read_stamps(output_dir)
+    if not stamps:
+        return False
+    for name, stamp in stamps.items():
+        try:
+            stat = os.stat(output_dir / name)
+        except OSError:
+            return False
+        if not isinstance(stamp, list) or stamp[1:] != [
+            stat.st_size,
+            stat.st_mtime_ns,
+        ]:
+            return False
+    return True
+
+
+def _read_stamps(output_dir: Path) -> dict[str, Any]:
+    try:
+        data = json.loads((output_dir / CARD_STAMPS).read_text("utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def _read_manifest(output_dir: Path) -> set[str]:
     try:
         return set(json.loads((output_dir / CARD_MANIFEST).read_text("utf-8")))
@@ -393,12 +467,26 @@ def _read_manifest(output_dir: Path) -> set[str]:
         return set()
 
 
+def _same_file(first: Path, second: Path) -> bool:
+    try:
+        return os.path.samefile(first, second)
+    except OSError:
+        return False
+
+
 def _remove_stale_cards(
     output_dir: Path, previous: set[str], current: set[str]
 ) -> None:
     manifest = output_dir / CARD_MANIFEST
+    by_folded = {name.casefold(): name for name in current}
     for card in sorted(previous - current):
         path = output_dir / card
+        # On a case-insensitive filesystem a stale `index.md` may be the
+        # very file just written as `INDEX.md` (or `util.md` as `Util.md`);
+        # deleting it would delete the current one.
+        twin = by_folded.get(card.casefold())
+        if twin is not None and _same_file(path, output_dir / twin):
+            continue
         try:
             path.unlink()
         except OSError:
