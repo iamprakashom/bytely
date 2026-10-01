@@ -177,7 +177,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0" },
     { name = "python-frontmatter", marker = "extra == 'agents'", specifier = ">=1.0" },
     { name = "rich", marker = "extra == 'agents'", specifier = ">=13.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.16" },
     { name = "tree-sitter", specifier = ">=0.23" },
     { name = "tree-sitter-c", marker = "extra == 'c'", specifier = ">=0.24.2" },
     { name = "tree-sitter-c-sharp", marker = "extra == 'csharp'", specifier = ">=0.23.5" },

@@ -70,8 +70,10 @@ PROJECTS = {
         import_from=("crate::util::", "crate::tools::"),
         extra=(
             "src/extra.rs",
-            "use crate::tools::assist;\n\n"
-            "pub fn also() -> u32 {\n    assist()\n}\n",
+            (
+                "use crate::tools::assist;\n\n"
+                "pub fn also() -> u32 {\n    assist()\n}\n"
+            ),
         ),
         registry=("src/lib.rs", "mod {name};\n"),
     ),
@@ -87,8 +89,10 @@ PROJECTS = {
         import_from=("'./util.mjs'", "'./tools.mjs'"),
         extra=(
             "extra.mjs",
-            "import { assist } from './tools.mjs';\n\n"
-            "export function also() {\n  return assist();\n}\n",
+            (
+                "import { assist } from './tools.mjs';\n\n"
+                "export function also() {\n  return assist();\n}\n"
+            ),
         ),
     ),
 }
@@ -244,7 +248,8 @@ def test_invalid_utf8_file_is_skipped_until_it_is_fixed(tmp_path: Path) -> None:
     graph = read_graph(str(repo / "bytely"))
     assert graph is not None
     paths = {node.path for node in graph.nodes}
-    assert "good.py" in paths and "bad.py" not in paths
+    assert "good.py" in paths
+    assert "bad.py" not in paths
 
     _write(repo, "bad.py", "def bad():\n    return 2\n")
     build_graph(str(repo))

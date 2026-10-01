@@ -38,10 +38,10 @@ INSTRUCTIONS = (
     "This repository is indexed by bytely: a graph of every definition, "
     "its exact file:line span, and who calls what. Prefer these tools to "
     "grepping and reading files; one call usually replaces several reads. "
-    "bytely_find_code answers \"how does X work\" / \"where is Y\" with "
+    'bytely_find_code answers "how does X work" / "where is Y" with '
     "ranked definitions (add source=true to see the code); "
     "bytely_find_all finds every occurrence of a pattern; "
-    "bytely_trace_calls shows callers or callees, and with depth=\"all\" "
+    'bytely_trace_calls shows callers or callees, and with depth="all" '
     "the blast radius of a change; bytely_file_api lists a file's API; "
     "bytely_repo_map orients you in an unfamiliar repository. Results "
     "reflect uncommitted edits: the graph refreshes before each query."
@@ -156,7 +156,9 @@ def _call_tool(
     except NoGraphError:
         return _tool_result(request_id, NO_GRAPH, is_error=True)
     except Exception as error:  # noqa: BLE001 - reported to the agent
-        print(f"bytely: {tool.name} failed: {error!r}", file=sys.stderr)
+        print(  # noqa: T201 - stderr; stdout carries the protocol
+            f"bytely: {tool.name} failed: {error!r}", file=sys.stderr
+        )
         return _tool_result(
             request_id, f"{tool.name} failed: {error}", is_error=True
         )

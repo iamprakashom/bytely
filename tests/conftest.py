@@ -14,7 +14,7 @@ import bytely.graph.check as graph_check
 TEMP_ROOT = Path(__file__).resolve().parents[1] / ".tmp" / "pytest-workspace"
 
 
-def pytest_configure(config: pytest.Config) -> None:
+def pytest_configure() -> None:
     """Create the test temp root inside the workspace."""
     TEMP_ROOT.mkdir(parents=True, exist_ok=True)
 

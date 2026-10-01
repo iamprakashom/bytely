@@ -31,7 +31,7 @@ class McpSession:
         env: dict[str, str] | None = None,
     ) -> None:
         """Start the server and complete the MCP handshake."""
-        self.process = subprocess.Popen(
+        self.process = subprocess.Popen(  # noqa: S603 - the caller's server
             command,
             cwd=cwd,
             env={**os.environ, **(env or {})},

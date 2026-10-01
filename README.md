@@ -25,6 +25,22 @@ Bytely is pure Python on top of tree-sitter, whose bindings and grammars ship
 as pre-built wheels. Installing it never compiles native code, so it installs
 the same way on Windows, macOS, and Linux.
 
+## Development
+
+```bash
+pytest                         # all tests (parity tests: pytest -m parity)
+ruff check --fix src tests bench .circleci   # lint; also sorts imports
+ruff format src tests bench .circleci        # format (does not sort imports)
+mypy src                       # strict
+```
+
+CI fails a pull request when `ruff check` or `ruff format --check` would
+change anything, so run both before pushing.
+
+The extraction cache invalidates itself when extractor code or a grammar
+version changes, so no manual cache bump is needed. If you move extraction
+logic into a new module, add it to `EXTRACTOR_MODULES` in
+`src/bytely/graph/extract_cache.py`.
 
 ## License
 

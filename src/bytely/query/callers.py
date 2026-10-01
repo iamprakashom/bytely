@@ -60,9 +60,7 @@ def render_callers(
             else []
         )
         seen = set(starts)
-        queue: deque[tuple[str, int]] = deque(
-            (start, 1) for start in starts
-        )
+        queue: deque[tuple[str, int]] = deque((start, 1) for start in starts)
         reported = 0
         truncated = False
         while queue and not truncated:

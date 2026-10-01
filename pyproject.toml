@@ -66,7 +66,8 @@ dev = [
     "pytest-asyncio>=0.23",
     "pytest-cov>=5.0",
     "mypy>=1.10",
-    "ruff>=0.4",
+    # The lint config and formatting style need ruff 0.16 (TC, 2025 style).
+    "ruff>=0.16",
 ]
 # Benchmark harness (`bench/run.py`): peak-memory sampling.
 bench = ["psutil>=5.9"]
@@ -89,14 +90,27 @@ src = ["src"]
 extend-exclude = ["tests/parity/fixtures"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "TCH", "D"]
+select = [
+    # pycodestyle, pyflakes, isort, naming, pyupgrade, bugbear, simplify,
+    # type-checking imports, docstrings
+    "E", "F", "W", "I", "N", "UP", "B", "SIM", "TC", "D",
+    # blind except, security, ruff-specific, packages need __init__.py,
+    # specific ignores, implicit string concatenation
+    "BLE", "S", "RUF", "INP", "PGH", "ISC",
+    # pytest style, no print in the library, comprehensions, performance
+    "PT", "T20", "C4", "PERF",
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["D"]
-"test_*.py" = ["D"]
+# Tests and dev tooling run their own interpreter and `git` as subprocesses.
+"tests/**/*.py" = ["D", "S101", "S603", "S607"]
+"test_*.py" = ["D", "S101", "S603", "S607"]
+# Standalone scripts, not packages; they report on stdout.
+"bench/*.py" = ["INP001", "T201", "S603", "S607"]
+".circleci/*.py" = ["INP001", "T201"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["bytely"]

@@ -52,14 +52,12 @@ def validate_graph(graph: GraphV1) -> None:
         ):
             errors.append(f"{edge.relation}: missing target node {edge.target}")
 
-    for scope in graph.scopes:
-        if scope.prefix and (
-            not scope.prefix.endswith("/") or "\\" in scope.prefix
-        ):
-            errors.append(
-                f"{scope.label}: scope prefix must be POSIX-normalized "
-                "and end with '/'"
-            )
+    errors.extend(
+        f"{scope.label}: scope prefix must be POSIX-normalized and end with '/'"
+        for scope in graph.scopes
+        if scope.prefix
+        and (not scope.prefix.endswith("/") or "\\" in scope.prefix)
+    )
 
     if errors:
         details = "\n".join(f"- {error}" for error in errors[:20])

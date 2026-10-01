@@ -175,7 +175,7 @@ def strip_section(path: Path, apply: bool) -> Action:
     return "removed"
 
 
-def _load_json(path: Path) -> dict[str, Any] | None | Literal["unparseable"]:
+def _load_json(path: Path) -> dict[str, Any] | Literal["unparseable"] | None:
     if not path.exists():
         return None
     try:

@@ -46,6 +46,7 @@ def test_resolves_use_import_and_call_across_modules(helper: str) -> None:
         for edge in edges
     )
 
+
 def test_resolves_grouped_use_imports_and_calls() -> None:
     importer = "src/main.rs"
     helper = "src/helper.rs"
@@ -197,7 +198,7 @@ def test_resolves_path_attribute_module_imports() -> None:
     helper = "src/support/custom.rs"
     importer_result = extract_file(
         importer,
-        "#[path = \"support/custom.rs\"] pub mod custom;\n"
+        '#[path = "support/custom.rs"] pub mod custom;\n'
         "use crate::custom::greet as say_hi;\n"
         "pub fn run() { say_hi(); }\n",
     )
@@ -271,8 +272,9 @@ def test_extracts_rust_types_and_owned_impl_methods() -> None:
     )
 
 
-def test_rust_matches_explicit_golden_for_symbols_and_unexpanded_macros(
-) -> None:
+def test_rust_matches_explicit_golden_for_symbols_and_unexpanded_macros() -> (
+    None
+):
     path = "src/lib.rs"
     source = (
         "use external_crate::Widget;\n"
@@ -331,9 +333,9 @@ def test_rust_matches_explicit_golden_for_symbols_and_unexpanded_macros(
 def test_cfg_alternative_functions_receive_stable_unique_ids() -> None:
     result = extract_file(
         "src/lib.rs",
-        "#[cfg(feature = \"alpha\")]\n"
+        '#[cfg(feature = "alpha")]\n'
         "pub fn decode() {}\n"
-        "#[cfg(feature = \"beta\")]\n"
+        '#[cfg(feature = "beta")]\n'
         "pub fn decode() {}\n",
     )
     decode_nodes = [node for node in result.nodes if node.name == "decode"]
@@ -351,9 +353,9 @@ def test_cfg_alternative_functions_with_complex_predicates_get_unique_ids() -> (
     active feature set; alternative definitions still get stable IDs."""
     result = extract_file(
         "src/lib.rs",
-        "#[cfg(all(unix, not(target_os = \"macos\")))]\n"
+        '#[cfg(all(unix, not(target_os = "macos")))]\n'
         "pub fn platform() {}\n"
-        "#[cfg(any(windows, target_os = \"macos\"))]\n"
+        '#[cfg(any(windows, target_os = "macos"))]\n'
         "pub fn platform() {}\n"
         "#[cfg(not(any(unix, windows)))]\n"
         "pub fn platform() {}\n",
@@ -411,7 +413,7 @@ def test_path_attribute_is_found_alongside_other_attributes() -> None:
         importer,
         "/// doc comment\n"
         "#[allow(dead_code)]\n"
-        "#[path = \"support/custom.rs\"]\n"
+        '#[path = "support/custom.rs"]\n'
         "pub mod custom;\n"
         "use crate::custom::greet;\n"
         "pub fn run() { greet(); }\n",
@@ -437,7 +439,7 @@ def test_cfg_attr_path_is_not_resolved_as_an_active_override() -> None:
     ambiguous without evaluating the feature."""
     result = extract_file(
         "src/lib.rs",
-        "#[cfg_attr(feature = \"custom\", path = \"support/custom.rs\")]\n"
+        '#[cfg_attr(feature = "custom", path = "support/custom.rs")]\n'
         "mod maybe_custom;\n",
     )
 
@@ -478,9 +480,7 @@ def test_trait_default_methods_are_methods_that_resolve_self_calls() -> None:
 def test_rust_spans_use_utf8_offsets_with_crlf_lines() -> None:
     result = extract_file(
         "src/lib.rs",
-        "//! Unicode: λ\r\n"
-        "mod before { pub fn run() {} }\r\n"
-        "mod after;\r\n",
+        "//! Unicode: λ\r\nmod before { pub fn run() {} }\r\nmod after;\r\n",
     )
     nodes = {node.id: node for node in result.nodes}
 
@@ -580,8 +580,7 @@ def test_resolves_self_and_super_module_imports(
     )
     main_result = extract_file(
         importer,
-        f"use {module_path}::greet as say_hi;\n"
-        "fn run() { say_hi(); }\n",
+        f"use {module_path}::greet as say_hi;\nfn run() {{ say_hi(); }}\n",
     )
     helper_result = extract_file(helper, "pub fn greet() {}\n")
     nodes = root_nodes + main_result.nodes + helper_result.nodes
@@ -624,7 +623,7 @@ def test_rust_type_qualified_calls_resolve_to_the_types_method(
         "pub fn run() {\n"
         "    let _ = Cache::new();\n"
         "    let _ = Other::new();\n"
-        "    let _ = String::from(\"x\");\n"
+        '    let _ = String::from("x");\n'
         "}\n",
         encoding="utf-8",
     )

@@ -107,7 +107,7 @@ def test_existing_markdown_where_a_card_goes_is_never_overwritten(
     _write(repo, {"a.py": "def f(): pass\n"})
     _write(out, {"a.md": "mine\n"})
 
-    with pytest.raises(FileExistsError, match="a.md"):
+    with pytest.raises(FileExistsError, match=r"a\.md"):
         build_graph(str(repo), str(out))
 
     assert (out / "a.md").read_text("utf-8") == "mine\n"

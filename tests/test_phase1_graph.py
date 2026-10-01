@@ -336,7 +336,8 @@ def test_build_reads_only_files_whose_stat_changed(
 
     monkeypatch.setattr(Path, "read_bytes", tracking)
     result = build_graph(str(tmp_path))
-    assert "a.py" not in read and "b.py" in read
+    assert "a.py" not in read
+    assert "b.py" in read
     assert (result.cache_hits, result.cache_misses) == (1, 1)
 
 
@@ -480,7 +481,8 @@ def test_build_rereads_a_same_size_edit_made_right_after_a_build(
 
     build_graph(str(tmp_path))
     names = {n.name for n in read_graph(str(tmp_path / "bytely")).nodes}
-    assert "b" in names and "a" not in names
+    assert "b" in names
+    assert "a" not in names
 
 
 def test_check_reads_every_file_even_when_its_stat_is_unchanged(

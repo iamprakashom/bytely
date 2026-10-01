@@ -80,8 +80,14 @@ jobs:
       - setup-python:
           python: "3.13"
       - run:
-          name: Ruff
+          name: Ruff check
           command: uv run --no-sync ruff check src tests bench .circleci
+      - run:
+          # Also report formatting when the lint step failed, so a pull
+          # request learns about both problems in one run.
+          name: Ruff format
+          command: uv run --no-sync ruff format --check src tests bench .circleci
+          when: always
       - run:
           name: Mypy
           command: |
@@ -184,28 +190,32 @@ jobs:
               --branch "<< pipeline.git.branch >>" \
               --sha "<< pipeline.git.revision >>" \
               --workflow-url "https://app.circleci.com/pipelines/workflows/$CIRCLE_WORKFLOW_ID" \
-              --expect test-3.11,test-3.12,test-3.13,test-3.14,test-windows,integration
+              --expect test-linux-py3.11,test-linux-py3.12,test-linux-py3.13,test-linux-py3.14,test-windows-py3.13,integration-linux
 
 workflows:
   ci:
     jobs:
       - lint
+      # Job names say which platform and Python each suite runs on; the PR
+      # comment shows them as they are.
       - test:
-          name: test-<< matrix.python >>
+          name: test-linux-py<< matrix.python >>
           matrix:
             parameters:
               python: ["3.11", "3.12", "3.13", "3.14"]
-      - test-windows
-      - integration
+      - test-windows:
+          name: test-windows-py3.13
+      - integration:
+          name: integration-linux
       - pr-report:
           context: bytely-github
           requires:
-            - test-3.11: terminal
-            - test-3.12: terminal
-            - test-3.13: terminal
-            - test-3.14: terminal
-            - test-windows: terminal
-            - integration: terminal
+            - test-linux-py3.11: terminal
+            - test-linux-py3.12: terminal
+            - test-linux-py3.13: terminal
+            - test-linux-py3.14: terminal
+            - test-windows-py3.13: terminal
+            - integration-linux: terminal
           filters:
             branches:
               ignore: main

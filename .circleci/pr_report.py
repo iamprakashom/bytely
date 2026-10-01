@@ -121,7 +121,11 @@ def parse_reports(root: Path) -> list[JobStats]:
         for report in sorted(folder.rglob("*.xml")):
             stats.reports += 1
             try:
-                document = ET.parse(report).getroot()
+                # Test output, possibly from a fork's tests. ElementTree never
+                # fetches external entities, and expat >= 2.4 caps entity
+                # expansion, so a hostile file can fail the parse but not
+                # read files or exhaust memory.
+                document = ET.parse(report).getroot()  # noqa: S314
             except ET.ParseError as error:
                 stats.add(
                     Case(
@@ -185,8 +189,10 @@ def render(
 
     lines = [
         MARKER,
-        f"### {icon} Tests · {commit} · {passed:,} passed · "
-        f"{problems:,} failed · {skipped:,} skipped",
+        (
+            f"### {icon} Tests · {commit} · {passed:,} passed · "
+            f"{problems:,} failed · {skipped:,} skipped"
+        ),
         "",
         "| Job | Passed | Failed | Skipped | Time |",
         "|---|--:|--:|--:|--:|",
@@ -199,8 +205,9 @@ def render(
             f"| {_cell(job.name)}{mark} | {job.passed:,} | {job.problems:,} "
             f"| {job.skipped:,} | {_duration(job.seconds)} |"
         )
-    for name in missing:
-        lines.append(f"| {_cell(name)} ⚠️ | — | — | — | no results |")
+    lines.extend(
+        f"| {_cell(name)} ⚠️ | — | — | — | no results |" for name in missing
+    )
 
     failures = [
         case
@@ -223,8 +230,10 @@ def render(
     if missing:
         lines += [
             "",
-            f"⚠️ No test results from: {', '.join(missing)} "
-            "(the job failed before tests ran, or was canceled).",
+            (
+                f"⚠️ No test results from: {', '.join(missing)} "
+                "(the job failed before tests ran, or was canceled)."
+            ),
         ]
 
     timed = sorted(
@@ -264,7 +273,8 @@ def github_api(token: str) -> Api:
     """A function that calls GitHub's REST API with `token`."""
 
     def call(method: str, path: str, body: dict[str, Any] | None) -> Any:
-        request = urllib.request.Request(
+        # Always https: the URL is API_ROOT plus a path built here.
+        request = urllib.request.Request(  # noqa: S310
             API_ROOT + path,
             method=method,
             data=json.dumps(body).encode() if body is not None else None,
@@ -276,7 +286,7 @@ def github_api(token: str) -> Api:
                 "Content-Type": "application/json",
             },
         )
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
             payload = response.read()
         return json.loads(payload) if payload else None
 

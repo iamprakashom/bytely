@@ -121,7 +121,7 @@ def grammar_installed(grammar: str) -> bool:
 def language_of(path: str) -> Language | None:
     """Map a file path to a supported language, or None if unsupported."""
     entry = _entry_for(path)
-    return entry["grammar"] if entry else None  # type: ignore
+    return entry["grammar"] if entry else None  # type: ignore[return-value]
 
 
 def language_label_of(path: str) -> str | None:
@@ -347,10 +347,7 @@ def file_residual(source: str, symbols: list[NodeV1]) -> str:
         for r in range(start, min(end + 1, len(covered))):
             covered[r] = 1
 
-    kept = []
-    for i in range(len(lines)):
-        if not covered[i + 1]:
-            kept.append(lines[i])
+    kept = [line for i, line in enumerate(lines) if not covered[i + 1]]
     return search_body(" ".join(kept), MAX_FILE_BODY_CHARS)
 
 
