@@ -52,9 +52,7 @@ def find_symbols(graph: GraphV1, symbol: str) -> list[NodeV1]:
     def base(name: str) -> str:
         return name.split("~", 1)[0]
 
-    qualified = [
-        node for node in nodes if base(qualified_name(node)) == symbol
-    ]
+    qualified = [node for node in nodes if base(qualified_name(node)) == symbol]
     if qualified:
         return sorted(qualified, key=lambda node: node.id)
     suffix = [

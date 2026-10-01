@@ -97,12 +97,15 @@ def test_init_writes_instructions_and_mcp_keeping_user_content(
     }
     codex = (home / ".codex" / "config.toml").read_text("utf-8")
     assert codex.startswith('[mcp_servers.other]\ncommand = "o"\n\n')
-    assert codex.endswith('[mcp_servers.bytely]\ncommand = "bytely"\n'
-                          'args = ["mcp"]\n')
+    assert codex.endswith(
+        '[mcp_servers.bytely]\ncommand = "bytely"\nargs = ["mcp"]\n'
+    )
     assert (repo / ".claude" / "skills" / "bytely" / "SKILL.md").is_file()
-    assert (repo / ".cursor" / "rules" / "bytely.mdc").read_text(
-        "utf-8"
-    ).startswith("---\ndescription:")
+    assert (
+        (repo / ".cursor" / "rules" / "bytely.mdc")
+        .read_text("utf-8")
+        .startswith("---\ndescription:")
+    )
 
     again = run_init(repo, home, all_hosts=True)
     assert {change.action for change in again.changes} <= {
@@ -168,8 +171,9 @@ def test_cli_init_and_uninstall(
     monkeypatch.setenv("USERPROFILE", str(home))
     runner = CliRunner()
 
-    dry = runner.invoke(main, ["init", str(repo), "--agents", "cursor",
-                               "--dry-run"])
+    dry = runner.invoke(
+        main, ["init", str(repo), "--agents", "cursor", "--dry-run"]
+    )
     assert dry.exit_code == 0, dry.output
     assert "would be created: .cursor/rules/bytely.mdc" in dry.output
     assert not (repo / ".cursor" / "rules").exists()

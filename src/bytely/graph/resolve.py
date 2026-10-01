@@ -703,9 +703,7 @@ def _resolve_type(
     if imported:
         return None, False
     reachable = [
-        node
-        for node in candidates
-        if _reachable(source_node.path, node.path)
+        node for node in candidates if _reachable(source_node.path, node.path)
     ]
     return (reachable[0], False) if len(reachable) == 1 else (None, False)
 

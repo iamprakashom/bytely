@@ -81,7 +81,9 @@ jobs:
           python: "3.13"
       - run:
           name: Ruff
-          command: uv run --no-sync ruff check src tests bench .circleci
+          command: |
+            uv run --no-sync ruff check src tests bench .circleci
+            uv run --no-sync ruff format --check src tests bench .circleci
       - run:
           name: Mypy
           command: |

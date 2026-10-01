@@ -86,9 +86,7 @@ def test_javascript_matches_explicit_golden_for_symbols_and_calls() -> None:
     assert actual == expected
 
     call_edges = {
-        (edge.source, edge.target)
-        for edge in edges
-        if edge.relation == "calls"
+        (edge.source, edge.target) for edge in edges if edge.relation == "calls"
     }
     # `format` comes from an external package and `shape.area()` has an untyped
     # receiver, so neither resolves. `new Shape(1)` is a `new_expression`, which
@@ -124,9 +122,10 @@ def test_javascript_ids_and_hashes_are_stable_across_extractions() -> None:
     helper_ids = [n.id for n in first.nodes if n.name == "helper"]
     assert helper_ids == ["src/dup.mjs#helper", "src/dup.mjs#helper~2"]
     bodies = {n.id: n.body for n in first.nodes}
-    assert bodies["src/dup.mjs#run"] == (
-        "export function run() { return helper(); }"
-    )[len("export ") :]
+    assert (
+        bodies["src/dup.mjs#run"]
+        == ("export function run() { return helper(); }")[len("export ") :]
+    )
 
 
 def test_javascript_named_aliased_and_namespace_imports_resolve(
@@ -399,9 +398,12 @@ def test_javascript_project_build_check_cache_and_staleness(
     assert graph is not None
     node_ids = [node.id for node in graph.nodes]
     assert len(node_ids) == len(set(node_ids))
-    assert {
-        node.path for node in graph.nodes if node.kind == "file"
-    } == {"src/util.js", "src/esm.mjs", "src/cjs.cjs", "src/View.jsx"}
+    assert {node.path for node in graph.nodes if node.kind == "file"} == {
+        "src/util.js",
+        "src/esm.mjs",
+        "src/cjs.cjs",
+        "src/View.jsx",
+    }
     assert _edges(graph, "calls") >= {
         ("src/esm.mjs#run", "src/util.js#greet"),
         ("src/cjs.cjs#start", "src/util.js#greet"),
@@ -445,7 +447,7 @@ def test_jsx_in_plain_js_file_is_extracted(tmp_path: Path) -> None:
                 "  return <button onClick={() => go()}>{label}</button>;\n"
                 "}\n"
                 "export function Page() {\n"
-                "  return <div><Button label=\"x\" /></div>;\n"
+                '  return <div><Button label="x" /></div>;\n'
                 "}\n"
                 "function go() { return 1 }\n"
             )
@@ -529,9 +531,7 @@ def test_path_aliases_and_workspace_packages_are_not_external(
     assert ("src/app.js#run", "vendor/react-shim.js#useState") not in calls
 
 
-def test_parse_error_recovery_does_not_mint_keyword_named_definitions() -> (
-    None
-):
+def test_parse_error_recovery_does_not_mint_keyword_named_definitions() -> None:
     # Reduced from React's Flow-typed ReactFiberConfigDOM.js: neither
     # grammar parses it cleanly, and error recovery reads the `if`
     # statements as methods named `if`. Real keyword-named methods outside

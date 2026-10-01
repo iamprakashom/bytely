@@ -15,8 +15,7 @@ if TYPE_CHECKING:
 def _project(root: Path) -> None:
     files = {
         "src/util.py": (
-            "def helper():\n    return 1\n\n\n"
-            "def unused():\n    return 2\n"
+            "def helper():\n    return 1\n\n\ndef unused():\n    return 2\n"
         ),
         "src/app.py": (
             "from .util import helper\n\n\n"

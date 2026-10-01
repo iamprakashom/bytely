@@ -468,8 +468,16 @@ def test_import_resolution_scales_linearly_with_repository_size() -> None:
         edge.target for edge in edges if edge.relation == "imports"
     }
     assert import_targets == {
-        "os", "sys", "json", "re", "typing", "pathlib",
-        "logging", "itertools", "functools", "collections",
+        "os",
+        "sys",
+        "json",
+        "re",
+        "typing",
+        "pathlib",
+        "logging",
+        "itertools",
+        "functools",
+        "collections",
     }
     assert elapsed < 5, f"import resolution took {elapsed:.1f}s"
 

@@ -151,11 +151,11 @@ TOOLS: tuple[Tool, ...] = (
     Tool(
         "bytely_find_code",
         "Query the repository's code graph in plain words, e.g. \"how "
-        "does auth work\" or \"where is rate limiting handled\". Returns "
+        'does auth work" or "where is rate limiting handled". Returns '
         "ranked definitions with exact file:line spans and each one's "
         "first lines of code (full=true for whole definitions) — usually "
-        "the full answer, with no file reads needed. \"Who calls X\" and "
-        "\"what does X call\" are answered from exact call edges.",
+        'the full answer, with no file reads needed. "Who calls X" and '
+        '"what does X call" are answered from exact call edges.',
         {
             "type": "object",
             "properties": {
@@ -209,8 +209,8 @@ TOOLS: tuple[Tool, ...] = (
     Tool(
         "bytely_trace_calls",
         "Exact graph edges for a symbol: who calls, extends, or implements "
-        "it (direction \"in\", the default), or what it calls (\"out\"). "
-        "depth>1 walks further; \"all\" returns the whole connected set — "
+        'it (direction "in", the default), or what it calls ("out"). '
+        'depth>1 walks further; "all" returns the whole connected set — '
         "the blast radius of a change. Run it before a multi-file refactor "
         "to find every affected file. The symbol may be bare (`save`), "
         "qualified (`Cache.save`), a node ID (`src/cache.py#Cache.save`), "
@@ -221,7 +221,7 @@ TOOLS: tuple[Tool, ...] = (
                 "symbol": {"type": "string"},
                 "direction": {"type": "string", "enum": ["in", "out"]},
                 "depth": {
-                    "description": "Levels to walk (default 1), or \"all\" "
+                    "description": 'Levels to walk (default 1), or "all" '
                     "for the full closure",
                     "oneOf": [
                         {"type": "integer", "minimum": 1},
