@@ -190,6 +190,36 @@ def test_ask_ranks_implementation_above_tests(
     assert rank(graph, "the of and") == []
 
 
+TIERS = {
+    "lib/exact.py": "def parse_option(value):\n    return value\n",
+    "lib/prefix.py": "def parse_optional(value):\n    return value\n",
+    "lib/fragment.py": "def parse_adoption(value):\n    return value\n",
+    "lib/unrelated.py": "def render(value):\n    return value\n",
+}
+
+
+def test_ask_ranks_exact_words_above_prefixes_above_fragments(
+    tmp_path: Path,
+) -> None:
+    for relative, text in TIERS.items():
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+    graph = refresh_graph(str(tmp_path)).graph
+
+    order = [
+        hit.node.name
+        for hit in rank(graph, "option")
+        if hit.node.kind != "file"
+    ]
+    assert order == ["parse_option", "parse_optional", "parse_adoption"]
+    # An abbreviation reaches the full word; ranking is deterministic.
+    abbreviated = [hit.node.name for hit in rank(graph, "opt")]
+    assert abbreviated[0] in {"parse_option", "parse_optional"}
+    assert "parse_adoption" in abbreviated
+    assert abbreviated == [hit.node.name for hit in rank(graph, "opt")]
+
+
 def test_ask_routes_structural_questions_and_shows_source(
     project: tuple[Path, GraphV1],
 ) -> None:
