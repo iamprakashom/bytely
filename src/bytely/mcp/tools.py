@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from bytely.graph.check import check_graph
+from bytely.query.ask import MCP_TOOLS
 from bytely.query.service import (
     QueryError,
     Workspace,
@@ -96,6 +97,7 @@ def _find_code(workspace: Workspace, arguments: dict[str, Any]) -> str:
         source=_flag(arguments, "source", True),
         full=_flag(arguments, "full", False),
         scope=_text(arguments, "in"),
+        tools=MCP_TOOLS,
     )
 
 

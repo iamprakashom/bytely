@@ -17,13 +17,15 @@ from bytely.graph.refresh import RefreshResult, refresh_graph
 from bytely.graph.root import find_bytely_root
 from bytely.hooks.metrics import session_input_rate
 from bytely.hooks.savings import baseline_for, paths_in, with_savings
-from bytely.query.ask import render_ask
+from bytely.query.ask import CLI_TOOLS, render_ask
 from bytely.query.callers import Direction, render_callers
 from bytely.query.common import SourceReader, find_file, find_symbols
 from bytely.query.grep import render_grep
 from bytely.query.skeleton import render_skeleton
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from bytely.graph.types import GraphV1, NodeV1
 
 
@@ -222,6 +224,7 @@ def ask_text(
     source: bool = False,
     full: bool = False,
     scope: str | None = None,
+    tools: Mapping[str, str] = CLI_TOOLS,
 ) -> str:
     """`ask`: ranked definitions for a question."""
     text = require_text(question, "query")
@@ -236,6 +239,7 @@ def ask_text(
             source=source,
             full=full,
             scope=scope,
+            tools=tools,
         ),
     )
 
