@@ -1,5 +1,4 @@
 {
-  "reference_version": "0.20.0",
   "fixture": "javascript",
   "nodes": {
     "src/App.jsx": {
