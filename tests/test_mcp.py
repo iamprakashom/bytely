@@ -176,6 +176,9 @@ def test_each_tool_answers_from_the_graph(session: Session) -> None:
     assert "save · method · pkg/store.py:L2-L3" in text
     # Code is included by default, as the reference implementation does.
     assert "def save(self, key: str) -> None:" in text
+    # The follow-up advice names this surface's tools.
+    assert 'bytely_file_api file="pkg/store.py"' in text
+    assert "bytely skeleton" not in text
 
     traced = _call(session, "bytely_trace_calls", symbol="write_file")
     assert "calls ← save · method" in _text(traced)
