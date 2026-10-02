@@ -8,6 +8,14 @@ rare each term is (IDF) with saturating term frequency (BM25-style). A
 personalized PageRank over the call and inheritance edges, seeded by those
 scores, then lifts code that is central to the matches. Structural
 questions ("who calls X", "what does X call") go straight to `callers`.
+
+A term matches in three tiers, strongest first: an exact word of the text
+(`echo` in `echo` or `style_echo`), a word that starts with the term, or
+that the term starts with in a name (`opt` for `option`, a prefix of
+at least three letters), and any other fragment of a longer word (`echo`
+inside `echoed`). The tiers count in full, `PREFIX_WEIGHT`, and
+`FRAGMENT_WEIGHT`. A cheap scan over every definition picks the strongest
+`RESCORE_LIMIT` candidates, and only those are scored with the tiers.
 """
 
 from __future__ import annotations
@@ -31,6 +39,8 @@ from bytely.query.common import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from bytely.graph.types import GraphV1, NodeV1
 
 CRUX_LINES = 8
@@ -40,6 +50,17 @@ QUALIFIED_WEIGHT = 2.0
 SIGNATURE_WEIGHT = 1.5
 BODY_WEIGHT = 1.0
 SATURATION = 1.2
+# How much a weaker kind of match counts, as a share of an exact word. An
+# abbreviation or longer form of the term (`opt` / `option`) is a good sign;
+# a fragment buried inside an unrelated longer word is a weak one.
+PREFIX_WEIGHT = 0.65
+FRAGMENT_WEIGHT = 0.3
+# Shortest word that may stand for a longer one (`opt`, not `o`).
+MIN_PREFIX = 3
+# Definitions that get the full tiered scoring: the strongest by the cheap
+# first pass. Far more than any answer shows, and a few tens of
+# milliseconds of tokenizing whatever the repository's size.
+RESCORE_LIMIT = 600
 # How much of the final score comes from graph centrality.
 PAGERANK_SHARE = 0.25
 DAMPING = 0.85
@@ -139,6 +160,10 @@ def terms(text: str) -> list[str]:
 @functools.lru_cache(maxsize=65536)
 def _cached_terms(text: str) -> tuple[str, ...]:
     # Names, paths, and signatures repeat across nodes and queries.
+    return _tokenize(text)
+
+
+def _tokenize(text: str) -> tuple[str, ...]:
     out = []
     for raw in re.findall(r"[A-Za-z0-9]+", text):
         for part in _CAMEL.findall(raw) or [raw]:
@@ -146,6 +171,17 @@ def _cached_terms(text: str) -> tuple[str, ...]:
             if len(word) > 1 and word not in STOP_WORDS:
                 out.append(word)
     return tuple(out)
+
+
+@functools.lru_cache(maxsize=4096)
+def _field_tokens(text: str) -> tuple[Counter[str], str]:
+    """A field's words, counted, and as one space-led string.
+
+    The string lets `str.count(" " + term)` count the words that start with
+    a term, without looping over them.
+    """
+    tokens = _tokenize(text)
+    return Counter(tokens), " " + " ".join(tokens)
 
 
 @functools.lru_cache(maxsize=65536)
@@ -167,22 +203,28 @@ class Hit:
 def rank(
     graph: GraphV1, question: str, *, scope: str | None = None
 ) -> list[Hit]:
-    """Definitions ordered by relevance to `question`, best first."""
+    """Definitions ordered by relevance to `question`, best first.
+
+    At most `RESCORE_LIMIT` definitions are returned: the strongest matches
+    of a first pass over all of them.
+    """
     query = list(dict.fromkeys(terms(question)))
     if not query:
         return []
     prefix = scope.replace("\\", "/").strip("/") + "/" if scope else ""
     candidates = [node for node in graph.nodes if node.path.startswith(prefix)]
 
+    # First pass, over every definition. The name is split into words (short,
+    # and where precision matters most), so its tiers are exact. Other fields
+    # only need the query's terms, counted as substrings of the lowercased
+    # text: that runs in C, and it finds terms inside identifiers
+    # (`renderTable` contains `table`). These counts also give each term's
+    # document frequency, so rarity does not depend on the tiers.
     fields = []
     document_frequency: Counter[str] = Counter()
     for node in candidates:
-        # The name is split into exact terms (short, and where precision
-        # matters most). Other fields only need the query's terms, counted
-        # as substrings of the lowercased text: that runs in C, and it also
-        # finds terms inside identifiers (`renderTable` contains `table`).
         name_terms = terms(node.name)
-        name = {term: name_terms.count(term) for term in query}
+        name = {term: _name_count(name_terms, term) for term in query}
         qualified = _count_terms(f"{node.path} {qualified_name(node)}", query)
         signature = _count_terms(node.signature or "", query)
         body = _count_terms(f"{node.summary or ''} {node.body or ''}", query)
@@ -206,10 +248,15 @@ def rank(
     penalize_tests = not {"test", "tests", "testing", "spec"} & {
         word.lower() for word in re.findall(r"\w+", question)
     }
-    lexical: dict[str, float] = {}
-    for node, (name, qualified, signature, body) in zip(
-        candidates, fields, strict=True
-    ):
+    top_idf = max(idf.values())
+
+    def score_of(
+        node: NodeV1,
+        name: Mapping[str, float],
+        qualified: Mapping[str, float],
+        signature: Mapping[str, float],
+        body: Mapping[str, float],
+    ) -> float:
         score = 0.0
         matched = 0
         for term in query:
@@ -223,17 +270,38 @@ def rank(
                 matched += 1
                 score += idf[term] * weighted
         if not score:
-            continue
+            return 0.0
         if node.name.lower() in raw_name or qualified_name(node).lower() in (
             raw_name
         ):
-            score += NAME_WEIGHT * max(idf.values())
+            score += NAME_WEIGHT * top_idf
         score *= (matched / len(query)) ** 0.5
         if node.kind == "file":
             score *= FILE_PENALTY
         if penalize_tests and _TEST_PATH.search(node.path):
             score *= TEST_PENALTY
-        lexical[node.id] = score
+        return float(score)
+
+    # Cheap scores pick the shortlist; the tiered scores then decide the order.
+    first_pass = [
+        (score, node, counts)
+        for node, counts in zip(candidates, fields, strict=True)
+        if (score := score_of(node, *counts))
+    ]
+    first_pass.sort(key=lambda item: (-item[0], item[1].id))
+    lexical: dict[str, float] = {}
+    for _, node, (name, qualified, signature, body) in first_pass[
+        :RESCORE_LIMIT
+    ]:
+        score = score_of(
+            node,
+            name,
+            _tiered(f"{node.path} {qualified_name(node)}", qualified, query),
+            _tiered(node.signature or "", signature, query),
+            _tiered(f"{node.summary or ''} {node.body or ''}", body, query),
+        )
+        if score:
+            lexical[node.id] = score
     if not lexical:
         return []
 
@@ -262,7 +330,50 @@ def _count_terms(text: str, query: list[str]) -> dict[str, int]:
     return {term: lowered.count(term) for term in query}
 
 
-def _saturate(frequency: int) -> float:
+def _name_count(words: list[str], term: str) -> float:
+    """Tiered count of `term` among a name's words.
+
+    An exact word counts in full. A word that starts with the term, or that
+    the term starts with (`opt` for `option`), counts `PREFIX_WEIGHT`.
+    """
+    exact = words.count(term)
+    if len(term) < MIN_PREFIX:
+        return float(exact)
+    related = sum(
+        1
+        for word in words
+        if word != term
+        and (
+            word.startswith(term)
+            or (len(word) >= MIN_PREFIX and term.startswith(word))
+        )
+    )
+    return exact + PREFIX_WEIGHT * related
+
+
+def _tiered(
+    text: str, substrings: dict[str, int], query: list[str]
+) -> dict[str, float]:
+    """Tiered counts of the query's terms in a field's text.
+
+    `substrings` are the first pass's counts of each term anywhere in the
+    text. Of those, the exact words count in full, the words that merely
+    start with the term count `PREFIX_WEIGHT`, and whatever is left (the
+    term inside a longer word) counts `FRAGMENT_WEIGHT`.
+    """
+    words, spaced = _field_tokens(text)
+    out = {}
+    for term in query:
+        exact = words.get(term, 0)
+        longer = (
+            spaced.count(" " + term) - exact if len(term) >= MIN_PREFIX else 0
+        )
+        fragment = max(0, substrings[term] - exact - longer)
+        out[term] = exact + PREFIX_WEIGHT * longer + FRAGMENT_WEIGHT * fragment
+    return out
+
+
+def _saturate(frequency: float) -> float:
     return frequency / (frequency + SATURATION) if frequency else 0.0
 
 
