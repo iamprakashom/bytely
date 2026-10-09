@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-__version__ = "0.21.0a1"
+# A `.devN` version until a release: a release commit sets the published
+# version (and the CHANGELOG heading) before tagging it `v<version>`.
+__version__ = "0.1.0.dev0"
 
 __all__ = ["Bytely", "__version__"]
 

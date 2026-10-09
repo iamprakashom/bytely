@@ -1,0 +1,45 @@
+name: Release
+
+# Publishing only: build the distributions and upload them to PyPI (a `v*`
+# tag) or TestPyPI (a manual run) with trusted publishing. Validating them
+# (contents, metadata, installing on Linux, macOS, and Windows) is CircleCI's
+# job, on every pull request.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && 'testpypi' || 'pypi' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+      - name: Verify the package version can be published
+        shell: bash
+        run: |
+          version=$(python -c 'import re; print(re.search(r"__version__ = \"([^\"]+)\"", open("src/bytely/__init__.py").read()).group(1))')
+          # Between releases the version is a `.devN`; a release commit sets
+          # the real one before tagging.
+          case "$version" in
+            *dev*) echo "::error::$version is a development version; set the release version first"; exit 1 ;;
+          esac
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            test "v${version}" = "${GITHUB_REF_NAME}" || { echo "::error::tag ${GITHUB_REF_NAME} does not match version ${version}"; exit 1; }
+          fi
+      - run: uvx --from build pyproject-build
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        if: github.event_name == 'push'
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          repository-url: https://test.pypi.org/legacy/
