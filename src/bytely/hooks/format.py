@@ -127,15 +127,15 @@ def blast_radius(graph: GraphV1, edited: str, cap: int = 8) -> str | None:
 
 
 DIRECTIVE = """\
-[bytely] This repo is indexed by bytely. To find, understand, or change code, reach for bytely first: it answers from a prebuilt graph with exact file:line, faster than grep/read. Pick the ONE tool that fits and act on its answer; most tasks need a single call. If one isn't enough, switch to the tool that fits the next need rather than re-asking a reworded question:
-  • bytely ask "<task>" --source: locate + understand. Ranked definitions with the code inlined at each file:line (the first 8 lines; --full shows the top 2 whole, up to 80 lines). The default for "how does X work" / "where is Y".
-  • bytely grep "<literal>": exhaustive find. Every occurrence, grouped by enclosing symbol; use it when you need them ALL (ask is ranked top-N).
-  • bytely skeleton <file>: a file's whole API, every signature + span, ~10x cheaper than reading the file.
-  • bytely callers <sym> [--direction out] [--depth N|all]: exact edges. Who calls it (default), what it calls (--direction out), or the blast radius (--depth 2, or --depth all). Run it before you change a symbol.
-  • bytely map: orientation for an unfamiliar repo: folders, hubs, hotspots. map alone is the answer.
-  Scope ask/grep/callers to one sub-project with --in <path>/.
-  Already know the file or symbol? Go straight to it: bytely grep "<symbol>", read the span, edit.
-  Refactor, rename, or multi-file change? Run bytely callers <sym> --depth all FIRST to map every connected file.
+[bytely] This repo is indexed by bytely. To find, understand, or change code, reach for bytely first: it answers from a prebuilt graph with exact file:line, faster than grep/read. Call its MCP tools directly (the CLI in parentheses is only for when they are unavailable; never wrap either in shell pipes). Pick the ONE tool that fits and act on its answer; most tasks need a single call. If one isn't enough, switch to the tool that fits the next need rather than re-asking a reworded question:
+  • bytely_find_code (CLI: bytely ask "<task>" --source): locate + understand. Ranked definitions with the code inlined at each file:line (the first 8 lines). The default for "how does X work" / "where is Y".
+  • bytely_find_all (CLI: bytely grep "<literal>"): exhaustive find. Every occurrence, grouped by enclosing symbol; use it when you need them ALL (find_code is ranked top-N).
+  • bytely_file_api (CLI: bytely skeleton <file>): a file's whole API, every signature + span, ~10x cheaper than reading the file.
+  • bytely_trace_calls (CLI: bytely callers <sym>): exact edges. Who calls it (default), what it calls (direction "out"), or the blast radius (depth 2, or "all"). Run it before you change a symbol.
+  • bytely_repo_map (CLI: bytely map): orientation for an unfamiliar repo: folders, hubs, hotspots. The map alone is the answer.
+  Scope find_code/find_all/trace_calls to one sub-project with in="<path>/".
+  Already know the file or symbol? Go straight to it: bytely_find_all on the symbol, read the span, edit.
+  Refactor, rename, or multi-file change? Run bytely_trace_calls with depth "all" FIRST to map every connected file.
 Each tool opens its output with a "[bytely] tokens saved ≈ N" line, sometimes with its dollar value; when you used bytely this turn, close your reply with a one-line tally of the total saved, dollars included when given (e.g. ⚡ bytely saved ~12k tokens (~$0.04) this turn, 3 calls). Never price tokens yourself; never pipe bytely through head/tail — output is already capped, and clipping drops that line.
 """  # noqa: E501
 
@@ -205,8 +205,8 @@ def _pack(hits: list[NodeV1]) -> str:
         blocks.append(block)
     return (
         "[bytely] starting points for this task: pull the code inline with "
-        '`bytely ask "<what you need>" --source`, trace impact with '
-        '`bytely callers <symbol>`, or search with `bytely grep "<literal>"`:'
+        "the bytely_find_code tool, trace impact with bytely_trace_calls, or "
+        "search with bytely_find_all:"
         "\n" + "\n".join(blocks)
     )
 
@@ -230,7 +230,7 @@ def retrieval(
         return (
             "[bytely] no strong match for this prompt (name match "
             f"{found.strong:.2f}) — the graph has more than this probe "
-            'found. Run `bytely ask "<your task>" --source` before grepping.'
+            "found. Call the bytely_find_code tool before grepping."
         )
     seen = set(session.get("injectedPointers") or [])
     fresh = [node for node in found.hits if pointer(node) not in seen][:cap]

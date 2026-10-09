@@ -15,7 +15,9 @@ This repository is indexed by bytely: a graph of every function, class, and
 method, with exact `file:line` spans and who calls what. It refreshes itself
 before every query, so answers include uncommitted edits.
 
-Before grepping or opening source files, ask the graph:
+Before grepping or opening source files, ask the graph. Call the MCP tools
+(`bytely_*`) directly; the CLI forms are for hosts without MCP. Don't wrap
+either in shell pipes: output is already capped.
 
 - **Where is X / how does Y work** → `bytely_find_code` (MCP) or
   `bytely ask "<question>" --source`: ranked definitions with their code
