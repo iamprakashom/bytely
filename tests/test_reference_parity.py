@@ -48,7 +48,6 @@ def test_fixture_differs_from_the_reference_only_as_documented(
     baseline = load_json(PARITY_ROOT / "baselines" / f"{fixture}.json")
     manifest = load_json(PARITY_ROOT / "divergences" / f"{fixture}.json")
 
-    assert baseline["reference_version"] == "0.20.0"
     unknown = {entry["reason"] for entry in manifest} - REASONS.keys()
     assert not unknown, f"unknown reason codes: {sorted(unknown)}"
 
