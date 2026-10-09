@@ -100,6 +100,11 @@ ITERATIONS = 20
 PAGERANK_SEEDS = 200
 NEIGHBOURHOOD_HOPS = 2
 FILE_PENALTY = 0.5
+# A variable bound to an import (`var f = require('./utils').f`) points at a
+# definition elsewhere; it shares the definition's name, so it would
+# otherwise outrank the code it imports.
+ALIAS_PENALTY = 0.3
+_IMPORT_ALIAS = re.compile(r"=\s*require\s*\(")
 # Test names repeat the words of the code they test, so tests would crowd
 # out the implementation; they rank lower unless the question is about tests.
 TEST_PENALTY = 0.4
@@ -316,6 +321,10 @@ def rank(
         score *= (matched / len(query)) ** 0.5
         if node.kind == "file":
             score *= FILE_PENALTY
+        elif node.kind == "variable" and _IMPORT_ALIAS.search(
+            node.signature or ""
+        ):
+            score *= ALIAS_PENALTY
         if penalize_tests and _TEST_PATH.search(node.path):
             score *= TEST_PENALTY
         return float(score)

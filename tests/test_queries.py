@@ -9,6 +9,7 @@ from click.testing import CliRunner
 
 from bytely.cli import main
 from bytely.graph.refresh import refresh_graph
+from bytely.query import ask
 from bytely.query.ask import rank, render_ask, terms
 from bytely.query.callers import render_callers
 from bytely.query.common import SourceReader, find_file, find_symbols
@@ -241,6 +242,44 @@ def test_ask_ranks_a_short_match_above_a_long_body_with_the_same_words(
 
     top = rank(graph, "dash prefix of a name")[0]
     assert top.node.name == "strip_marker"
+
+
+def test_ask_ranks_a_require_alias_below_real_code(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "lib").mkdir()
+    (tmp_path / "lib" / "utils.js").write_text(
+        "exports.compileETag = function(val) {\n"
+        "  if (typeof val === 'function') return val;\n"
+        "  return val ? exports.wetag : undefined;\n"
+        "};\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "lib" / "application.js").write_text(
+        "var compileETag = require('./utils').compileETag;\n"
+        "app.set = function set(setting, val) {\n"
+        "  if (setting === 'etag') this.etagFn = compileETag(val);\n"
+        "  return this;\n"
+        "};\n",
+        encoding="utf-8",
+    )
+    graph = refresh_graph(str(tmp_path)).graph
+    alias = "lib/application.js#compileETag"
+    question = "compileETag function definition"
+
+    def order() -> list[str]:
+        return [hit.node.id for hit in rank(graph, question)]
+
+    ranked = order()
+    # The alias only points at the definition: it ranks below both the
+    # definition and the code that uses it.
+    assert ranked[0] == "lib/utils.js#compileETag"
+    assert ranked.index(alias) > ranked.index("lib/application.js#app.set")
+    monkeypatch.setattr(ask, "ALIAS_PENALTY", 1.0)
+    unpenalized = order()
+    assert unpenalized.index(alias) < unpenalized.index(
+        "lib/application.js#app.set"
+    )
 
 
 def test_ask_full_shows_the_top_hits_whole_up_to_a_cap(
