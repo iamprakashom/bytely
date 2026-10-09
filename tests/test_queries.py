@@ -243,6 +243,46 @@ def test_ask_ranks_a_short_match_above_a_long_body_with_the_same_words(
     assert top.node.name == "strip_marker"
 
 
+def test_ask_full_shows_the_top_hits_whole_up_to_a_cap(
+    tmp_path: Path,
+) -> None:
+    steps = "\n".join(f"    step_{i} = {i}" for i in range(100))
+    for name in ("first", "second", "third"):
+        (tmp_path / f"{name}.py").write_text(
+            f"def {name}_routine():\n{steps}\n", encoding="utf-8"
+        )
+    graph = refresh_graph(str(tmp_path)).graph
+    reader = SourceReader(tmp_path)
+
+    text = render_ask(graph, reader, "routine step", limit=3, full=True)
+    hits = text.split("\n\n")[1:4]
+    # The top two show 80 lines and point at the rest of the file.
+    for hit in hits[:2]:
+        assert "step_78 = 78" in hit
+        assert "step_79 = 79" not in hit
+        assert "… +21 more lines (open " in hit
+    # The third keeps the short excerpt.
+    assert "step_6 = 6" in hits[2]
+    assert "step_7 = 7" not in hits[2]
+
+
+def test_ask_cuts_signatures_that_hold_a_whole_definition(
+    tmp_path: Path,
+) -> None:
+    body = " ".join(f"total += {i};" for i in range(80))
+    (tmp_path / "utils.js").write_text(
+        f"exports.addAll = function(total) {{ {body} return total; }};\n",
+        encoding="utf-8",
+    )
+    graph = refresh_graph(str(tmp_path)).graph
+
+    text = render_ask(graph, SourceReader(tmp_path), "addAll", limit=1)
+    header = text.split("\n")[3]
+    assert header.startswith("   exports.addAll = function(total)")
+    assert header.endswith("…")
+    assert len(header.strip()) == 200
+
+
 def test_ask_routes_structural_questions_and_shows_source(
     project: tuple[Path, GraphV1],
 ) -> None:

@@ -46,6 +46,14 @@ if TYPE_CHECKING:
     from bytely.graph.types import GraphV1, NodeV1
 
 CRUX_LINES = 8
+# With `full`, the top hits show their whole definition, up to this many
+# lines each; the rest keep the first `CRUX_LINES`. Uncapped, a few large
+# classes among the hits made a single answer 30-40k characters, which an
+# agent then carries through every later turn.
+FULL_HITS = 2
+MAX_SPAN_LINES = 80
+# Longest signature shown on a hit's header line.
+MAX_SIGNATURE_CHARS = 200
 # Field weights: a term in the name says far more than one in the body.
 NAME_WEIGHT = 4.0
 QUALIFIED_WEIGHT = 2.0
@@ -505,7 +513,7 @@ def render_ask(
         out.append("")
         out.append(f"{index}. {describe(node)}  [{hit.score:.2f}]")
         if node.signature:
-            out.append(f"   {' '.join(node.signature.split())}")
+            out.append(f"   {_short_signature(node.signature)}")
         if (
             node.summary
             and node.summary.strip()
@@ -526,15 +534,31 @@ def render_ask(
             out.append(f"     … crux of {node.span} (--full for all of it)")
         elif source or full:
             start, end = span_lines(node.span)
-            lines = reader.span(node, None if full else CRUX_LINES)
+            whole = full and index <= FULL_HITS
+            lines = reader.span(node, MAX_SPAN_LINES if whole else CRUX_LINES)
             if lines:
                 out.append(numbered(lines, start, indent="     "))
                 hidden = (end - start + 1) - len(lines)
                 if hidden > 0:
-                    out.append(f"     … +{hidden} more lines (--full)")
+                    rest = f"{node.path}:L{start + len(lines)}-L{end}"
+                    hint = f"open {rest}" if full else "--full"
+                    out.append(f"     … +{hidden} more lines ({hint})")
     out.append("")
     out.append(_next_step(ranked, tools).rstrip("\n"))
     return "\n".join(out) + "\n"
+
+
+def _short_signature(signature: str) -> str:
+    """A signature on one line, cut at `MAX_SIGNATURE_CHARS`.
+
+    Some definitions have no separate body to stop at (a JavaScript
+    `exports.f = function …` assignment, a constant table), so their
+    "signature" is the whole definition.
+    """
+    text = " ".join(signature.split())
+    if len(text) > MAX_SIGNATURE_CHARS:
+        return text[: MAX_SIGNATURE_CHARS - 1] + "…"
+    return text
 
 
 def _next_step(ranked: list[Hit], tools: Mapping[str, str]) -> str:

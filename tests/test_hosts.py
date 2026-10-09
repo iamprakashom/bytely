@@ -128,6 +128,29 @@ def test_uninstall_restores_every_file(tmp_path: Path) -> None:
     assert (home / ".gemini" / "config").is_dir()
 
 
+def test_omnirush_gets_agents_md_and_its_own_mcp_registry(
+    tmp_path: Path,
+) -> None:
+    repo, home = tmp_path / "repo", tmp_path / "home"
+    (home / ".omnirush").mkdir(parents=True)
+    repo.mkdir()
+    (repo / "app.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+
+    detected, _ = select_hosts(Probe(repo, home), None, False)
+    assert "omnirush" in detected
+    run_init(repo, home, agents=["omnirush"])
+
+    assert files.START in (repo / "AGENTS.md").read_text("utf-8")
+    registry = home / ".omnirush" / "mcp.json"
+    assert json.loads(registry.read_text("utf-8"))["mcpServers"] == {
+        "bytely": {"command": "bytely", "args": ["mcp"]}
+    }
+    run_uninstall(repo, home)
+    assert not (repo / "AGENTS.md").exists()
+    assert not registry.exists()
+    assert (home / ".omnirush").is_dir()  # OmniRush's folder, not ours
+
+
 def test_dry_run_and_scope_flags(tmp_path: Path) -> None:
     repo, home = _setup(tmp_path)
     before = sorted(str(p) for p in tmp_path.rglob("*"))
