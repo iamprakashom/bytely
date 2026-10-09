@@ -629,3 +629,27 @@ def test_concurrent_rebuilds_are_serialized(
     fresh, message = check_graph(str(repo))
     assert fresh, message
     assert not (repo / "bytely" / "cache" / ".build.lock").exists()
+
+
+def test_injected_guidance_names_only_real_mcp_tools() -> None:
+    # The session-start directive and per-prompt hints steer agents to the
+    # MCP tools by name; a renamed or removed tool must not be advertised.
+    import re
+
+    from bytely.graph.types import NodeV1
+    from bytely.hooks.format import DIRECTIVE, _pack
+    from bytely.hosts.instructions import instruction_body
+    from bytely.mcp.tools import TOOLS_BY_NAME
+
+    node = NodeV1(
+        id="a.py#f",
+        name="f",
+        kind="function",
+        path="a.py",
+        span="L1-L2",
+        body_hash="x",
+    )
+    for text in (DIRECTIVE, _pack([node]), instruction_body()):
+        named = set(re.findall(r"\bbytely_[a-z_]+\b", text))
+        assert named, "guidance should name the MCP tools"
+        assert named <= set(TOOLS_BY_NAME), named - set(TOOLS_BY_NAME)
