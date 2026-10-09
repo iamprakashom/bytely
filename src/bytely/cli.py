@@ -450,7 +450,11 @@ def grep(
     "-n", "limit", type=click.IntRange(min=1), default=8, show_default=True
 )
 @click.option("--source", is_flag=True, help="Show each hit's first lines")
-@click.option("--full", is_flag=True, help="Show each hit's whole definition")
+@click.option(
+    "--full",
+    is_flag=True,
+    help="Show the top 2 hits' whole definitions, up to 80 lines each",
+)
 @_IN
 @_ROOT
 @click.pass_context

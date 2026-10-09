@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from bytely.graph.check import check_graph
+from bytely.query.ask import MCP_TOOLS
 from bytely.query.service import (
     QueryError,
     Workspace,
@@ -96,6 +97,7 @@ def _find_code(workspace: Workspace, arguments: dict[str, Any]) -> str:
         source=_flag(arguments, "source", True),
         full=_flag(arguments, "full", False),
         scope=_text(arguments, "in"),
+        tools=MCP_TOOLS,
     )
 
 
@@ -153,8 +155,8 @@ TOOLS: tuple[Tool, ...] = (
         "Query the repository's code graph in plain words, e.g. \"how "
         'does auth work" or "where is rate limiting handled". Returns '
         "ranked definitions with exact file:line spans and each one's "
-        "first lines of code (full=true for whole definitions) — usually "
-        'the full answer, with no file reads needed. "Who calls X" and '
+        "first lines of code — usually the answer, with no file reads "
+        'needed; open a file only at a span it names. "Who calls X" and '
         '"what does X call" are answered from exact call edges.',
         {
             "type": "object",
@@ -175,7 +177,8 @@ TOOLS: tuple[Tool, ...] = (
                 },
                 "full": {
                     "type": "boolean",
-                    "description": "Show whole definitions instead of the "
+                    "description": "Show the top 2 results' whole "
+                    "definitions (up to 80 lines each) instead of their "
                     "first 8 lines",
                 },
                 "in": _IN,

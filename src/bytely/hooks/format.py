@@ -128,7 +128,7 @@ def blast_radius(graph: GraphV1, edited: str, cap: int = 8) -> str | None:
 
 DIRECTIVE = """\
 [bytely] This repo is indexed by bytely. To find, understand, or change code, reach for bytely first: it answers from a prebuilt graph with exact file:line, faster than grep/read. Pick the ONE tool that fits and act on its answer; most tasks need a single call. If one isn't enough, switch to the tool that fits the next need rather than re-asking a reworded question:
-  • bytely ask "<task>" --source: locate + understand. Ranked definitions with the code inlined at each file:line (the first 8 lines; --full for the whole span). The default for "how does X work" / "where is Y".
+  • bytely ask "<task>" --source: locate + understand. Ranked definitions with the code inlined at each file:line (the first 8 lines; --full shows the top 2 whole, up to 80 lines). The default for "how does X work" / "where is Y".
   • bytely grep "<literal>": exhaustive find. Every occurrence, grouped by enclosing symbol; use it when you need them ALL (ask is ranked top-N).
   • bytely skeleton <file>: a file's whole API, every signature + span, ~10x cheaper than reading the file.
   • bytely callers <sym> [--direction out] [--depth N|all]: exact edges. Who calls it (default), what it calls (--direction out), or the blast radius (--depth 2, or --depth all). Run it before you change a symbol.

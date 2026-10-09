@@ -220,6 +220,69 @@ def test_ask_ranks_exact_words_above_prefixes_above_fragments(
     assert abbreviated == [hit.node.name for hit in rank(graph, "opt")]
 
 
+def test_ask_ranks_a_short_match_above_a_long_body_with_the_same_words(
+    tmp_path: Path,
+) -> None:
+    filler = "\n".join(f"    setting_{i} = {i}" for i in range(60))
+    (tmp_path / "registry.py").write_text(
+        "class Registry:\n"
+        '    """Holds entries by name; a dash prefix marks a flag name."""\n'
+        f"{filler}\n"
+        "    # The prefix and dash are kept with the name.\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "helpers.py").write_text(
+        "def strip_marker(text):\n"
+        '    """Drop the dash prefix from a name."""\n'
+        '    return text.lstrip("-")\n',
+        encoding="utf-8",
+    )
+    graph = refresh_graph(str(tmp_path)).graph
+
+    top = rank(graph, "dash prefix of a name")[0]
+    assert top.node.name == "strip_marker"
+
+
+def test_ask_full_shows_the_top_hits_whole_up_to_a_cap(
+    tmp_path: Path,
+) -> None:
+    steps = "\n".join(f"    step_{i} = {i}" for i in range(100))
+    for name in ("first", "second", "third"):
+        (tmp_path / f"{name}.py").write_text(
+            f"def {name}_routine():\n{steps}\n", encoding="utf-8"
+        )
+    graph = refresh_graph(str(tmp_path)).graph
+    reader = SourceReader(tmp_path)
+
+    text = render_ask(graph, reader, "routine step", limit=3, full=True)
+    hits = text.split("\n\n")[1:4]
+    # The top two show 80 lines and point at the rest of the file.
+    for hit in hits[:2]:
+        assert "step_78 = 78" in hit
+        assert "step_79 = 79" not in hit
+        assert "… +21 more lines (open " in hit
+    # The third keeps the short excerpt.
+    assert "step_6 = 6" in hits[2]
+    assert "step_7 = 7" not in hits[2]
+
+
+def test_ask_cuts_signatures_that_hold_a_whole_definition(
+    tmp_path: Path,
+) -> None:
+    body = " ".join(f"total += {i};" for i in range(80))
+    (tmp_path / "utils.js").write_text(
+        f"exports.addAll = function(total) {{ {body} return total; }};\n",
+        encoding="utf-8",
+    )
+    graph = refresh_graph(str(tmp_path)).graph
+
+    text = render_ask(graph, SourceReader(tmp_path), "addAll", limit=1)
+    header = text.split("\n")[3]
+    assert header.startswith("   exports.addAll = function(total)")
+    assert header.endswith("…")
+    assert len(header.strip()) == 200
+
+
 def test_ask_routes_structural_questions_and_shows_source(
     project: tuple[Path, GraphV1],
 ) -> None:
@@ -236,6 +299,27 @@ def test_ask_routes_structural_questions_and_shows_source(
 
     empty = render_ask(graph, reader, "zzzz")
     assert "(lexical, 0 results)" in empty
+    assert "no hits; don't re-ask with new wording" in empty
+
+
+def test_ask_suggests_switching_tools_rather_than_rewording(
+    project: tuple[Path, GraphV1],
+) -> None:
+    root, graph = project
+    reader = SourceReader(root)
+
+    few = render_ask(graph, reader, "gift")
+    assert few.rstrip().endswith(
+        "[bytely] only 1 hit; don't re-ask with new wording, switch tool: "
+        'bytely grep "<literal>" for every occurrence · bytely skeleton '
+        "shop/cart.py for a file's API · bytely callers "
+        "shop/cart.py#GiftCart --direction out for what it calls."
+    )
+    # Few hits shown because of `limit` is not few matches.
+    many = render_ask(graph, reader, "cart total discount", limit=1)
+    assert "[bytely] Not here? Don't reword the question" in many
+    assert "bytely skeleton shop/cart.py lists the file" in many
+    assert "only 1 hit" not in many
 
 
 def test_query_commands_run_from_the_cli(tmp_path: Path) -> None:

@@ -114,6 +114,11 @@ HOSTS: tuple[Host, ...] = (
             p.repo / ".agents",
         ),
     ),
+    Host(
+        "omnirush",
+        "OmniRush",
+        lambda p: p.has(p.home / ".omnirush", p.repo / ".omnirush"),
+    ),
     Host("copilot", "GitHub Copilot", lambda p: p.has(p.repo / ".github")),
     Host("kiro", "Kiro", lambda p: p.has(p.home / ".kiro", p.repo / ".kiro")),
     Host(
@@ -432,6 +437,24 @@ def targets_for(
                 "global",
             ),
         ]
+    if host_id == "omnirush":
+        # OmniRush reads the project's AGENTS.md, and MCP servers only from
+        # its own state folder (`~/.omnirush/mcp.json`), never the repo's
+        # `.mcp.json`. That registry is written only where OmniRush is
+        # installed, like Codex's.
+        wired = [_section("omnirush", repo / "AGENTS.md")]
+        if every or (home / ".omnirush").is_dir():
+            wired.append(
+                _json_server(
+                    "omnirush",
+                    home / ".omnirush" / "mcp.json",
+                    "mcpServers",
+                    entry,
+                    "global",
+                    home,
+                )
+            )
+        return wired
     if host_id == "copilot":
         return [
             _section("copilot", repo / ".github" / "copilot-instructions.md")
