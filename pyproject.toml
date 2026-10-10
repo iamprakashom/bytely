@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "bytely"
-version = "0.21.0a1"
+dynamic = ["version"]
 description = "Build a repo's context graph as a folder of linked markdown files: a local, regenerable cache that every query keeps in sync with your code."
 readme = "README.md"
 license = "MPL-2.0"
@@ -16,8 +16,11 @@ authors = [
 keywords = ["ai", "agents", "knowledge-graph", "context", "codebase", "llm", "bytely"]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -65,9 +68,11 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "pytest-cov>=5.0",
+    "build>=1.2",
     "mypy>=1.10",
     # The lint config and formatting style need ruff 0.16 (TC, 2025 style).
     "ruff>=0.16",
+    "twine>=5.0",
 ]
 # Benchmark harness (`bench/run.py`): peak-memory sampling.
 bench = ["psutil>=5.9"]
@@ -78,8 +83,20 @@ bytely = "bytely.cli:main"
 
 # --- Tool configs ---
 
+[tool.hatch.version]
+path = "src/bytely/__init__.py"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/bytely"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src/bytely",
+    "/pyproject.toml",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+]
 
 [tool.ruff]
 target-version = "py311"
