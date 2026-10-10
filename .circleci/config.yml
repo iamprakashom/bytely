@@ -2,6 +2,11 @@
 # Windows, and integration tests on real repositories from the benchmark
 # corpus (on both). On a pull request, `pr-report` then posts the results of
 # every test job as one comment, edited in place on each push.
+# Packaging: `package-build` builds the wheel and source distribution and
+# validates them (contents allowlist, twine metadata); `package-install-*`
+# installs each into a clean environment on Linux, macOS, and Windows, outside
+# the checkout, and runs the installed `bytely` command. Publishing is not
+# done here: .github/workflows/release.yml only builds and uploads.
 # Dependencies come from uv.lock (`uv sync --locked`), so CI tests exactly
 # what is locked and fails when pyproject.toml and the lock disagree.
 #
@@ -23,6 +28,10 @@ executors:
     docker:
       - image: cimg/base:current
     resource_class: medium
+  macos:
+    macos:
+      xcode: "16.4.0"
+    resource_class: m4pro.medium
 
 commands:
   install-uv:
@@ -92,7 +101,7 @@ jobs:
           name: Mypy
           command: |
             uv run --no-sync mypy src
-            uv run --no-sync mypy bench/run.py bench/fetch.py bench/hotspots.py bench/compare.py .circleci/pr_report.py
+            uv run --no-sync mypy bench/run.py bench/fetch.py bench/hotspots.py bench/compare.py .circleci/pr_report.py .circleci/check_package_contents.py .circleci/package_smoke.py
 
   test:
     parameters:
@@ -172,6 +181,113 @@ jobs:
       - save-reports
       - fail-if-tests-failed
 
+  package-build:
+    # Builds the wheel and source distribution once, rejects any file outside
+    # the allowlist, and checks the metadata PyPI will render. The install
+    # jobs test exactly these files.
+    executor: linux
+    steps:
+      - checkout
+      - setup-python:
+          python: "3.13"
+      - run:
+          name: Build distributions
+          command: uv run --no-sync python -m build
+      - run:
+          name: Check distribution contents
+          command: uv run --no-sync python .circleci/check_package_contents.py
+      - run:
+          name: Check metadata
+          command: uv run --no-sync twine check dist/*
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
+
+  package-install:
+    # Installs the built wheel into a fresh environment, away from the
+    # checkout, and runs the installed command; then an optional-grammar
+    # extra; then the source distribution in place of the wheel.
+    parameters:
+      os:
+        type: executor
+      python:
+        type: string
+    executor: << parameters.os >>
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - install-uv
+      - run:
+          name: Install the wheel and run it (Python << parameters.python >>)
+          command: |
+            uv venv --python << parameters.python >> "$HOME/pkg"
+            . "$HOME/pkg/bin/activate"
+            uv pip install dist/*.whl
+            python .circleci/package_smoke.py
+      - run:
+          name: Install an optional grammar extra
+          command: |
+            . "$HOME/pkg/bin/activate"
+            version=$(python -c 'from importlib.metadata import version; print(version("bytely"))')
+            uv pip install "bytely[go]==${version}" --no-index --find-links dist --no-deps
+            uv pip install "tree-sitter-go>=0.23"
+            python -c "import tree_sitter_go"
+      - run:
+          name: Install the source distribution and run it
+          command: |
+            . "$HOME/pkg/bin/activate"
+            uv pip install --reinstall-package bytely dist/*.tar.gz
+            python .circleci/package_smoke.py
+
+  package-install-windows:
+    # The same as package-install, in PowerShell.
+    parameters:
+      python:
+        type: string
+    executor:
+      name: win/default
+      shell: powershell.exe
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install the wheel and run it (Python << parameters.python >>)
+          command: |
+            $ErrorActionPreference = "Stop"
+            irm https://astral.sh/uv/<< pipeline.parameters.uv-version >>/install.ps1 | iex
+            $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+            uv venv --python << parameters.python >> "$env:USERPROFILE\pkg"
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            & "$env:USERPROFILE\pkg\Scripts\Activate.ps1"
+            uv pip install (Get-ChildItem dist\*.whl).FullName
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            python .circleci/package_smoke.py
+            exit $LASTEXITCODE
+      - run:
+          name: Install an optional grammar extra
+          command: |
+            $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+            & "$env:USERPROFILE\pkg\Scripts\Activate.ps1"
+            $version = python -c "from importlib.metadata import version; print(version('bytely'))"
+            uv pip install "bytely[go]==$version" --no-index --find-links dist --no-deps
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            uv pip install "tree-sitter-go>=0.23"
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            python -c "import tree_sitter_go"
+            exit $LASTEXITCODE
+      - run:
+          name: Install the source distribution and run it
+          command: |
+            $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+            & "$env:USERPROFILE\pkg\Scripts\Activate.ps1"
+            uv pip install --reinstall-package bytely (Get-ChildItem dist\*.tar.gz).FullName
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            python .circleci/package_smoke.py
+            exit $LASTEXITCODE
+
   pr-report:
     # Posts the test jobs' results to the branch's open pull request. Runs
     # after them whatever their outcome; needs GITHUB_TOKEN from the
@@ -239,6 +355,22 @@ workflows:
           name: test-windows-py3.13
       - integration:
           name: integration-linux
+      - package-build
+      - package-install:
+          name: package-<< matrix.os >>-py<< matrix.python >>
+          matrix:
+            parameters:
+              os: [linux, macos]
+              python: ["3.11", "3.12", "3.13"]
+          requires:
+            - package-build
+      - package-install-windows:
+          name: package-windows-py<< matrix.python >>
+          matrix:
+            parameters:
+              python: ["3.11", "3.12", "3.13"]
+          requires:
+            - package-build
       - pr-report:
           context: bytely-github
           requires:
